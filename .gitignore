@@ -1,9 +1,9 @@
 node_modules/
-.next/
-out/
+dist/
+.astro/
 .env*
 !.env.example
 .DS_Store
 playwright-report/
 test-results/
-.vercel
+.wrangler/
