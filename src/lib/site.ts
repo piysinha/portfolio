@@ -1,6 +1,11 @@
 export const owner = {
 	name: 'Piyush Sinha',
 	role: 'SDET at Aumni Techworks',
+	links: {
+		github: 'https://github.com/piysinha',
+		linkedin: 'https://www.linkedin.com/in/piyush-sinha-sdet',
+	},
+	resume: '/piyush-sinha-resume.pdf',
 };
 
 export const sections = [

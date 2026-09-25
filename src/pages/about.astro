@@ -1,8 +1,33 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
+import { owner } from '../lib/site';
 ---
 
 <BaseLayout title="About">
 	<h1>About</h1>
-	<p>Coming soon.</p>
+	<div class="bio" data-testid="bio">
+		<p>
+			I'm a Software Development Engineer in Test (SDET) with 4.5+ years building Playwright + TypeScript automation
+			frameworks.
+		</p>
+		<p>
+			At Aumni Techworks, I automate web-app and API testing with Playwright, TypeScript and the Playwright-Cucumber
+			(BDD) framework. Before that, at Cognizant, I designed and scaled automation frameworks across legacy migration,
+			payment and insurance platforms.
+		</p>
+		<p>
+			Alongside test automation, I'm building backend skills with Java and Spring Boot through low-level and system
+			design practice: a JWT-based auth service, a Stripe-integrated payment service and a Splitwise-style expense
+			splitter.
+		</p>
+		<p>
+			I came into tech from non-technical roles in customer service and hospitality. I'm completing Scaler's Full
+			Stack Development program, and I hold an AWS Solutions Architect Associate certification.
+		</p>
+	</div>
+	<ul class="about-links">
+		<li><a class="button button-primary" href={owner.resume} download>Download résumé</a></li>
+		<li><a href={owner.links.github}>GitHub</a></li>
+		<li><a href={owner.links.linkedin}>LinkedIn</a></li>
+	</ul>
 </BaseLayout>

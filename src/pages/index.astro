@@ -1,9 +1,45 @@
 ---
+import { getCollection } from 'astro:content';
+import EntryCard from '../components/EntryCard.astro';
 import BaseLayout from '../layouts/BaseLayout.astro';
+import { featuredWork } from '../lib/featured';
 import { owner } from '../lib/site';
+
+const featured = featuredWork(await getCollection('projects'), await getCollection('caseStudies'));
 ---
 
 <BaseLayout>
-	<h1>{owner.name}</h1>
-	<p>{owner.role}</p>
+	<section class="hero">
+		<h1>{owner.name}</h1>
+		<p class="hero-role">{owner.role}</p>
+		<p class="hero-intro" data-testid="intro">
+			I've spent 4.5+ years building Playwright + TypeScript automation frameworks for web apps and APIs, and I'm
+			growing into backend development with Java and Spring Boot. This site runs its own test suite on every deploy.
+		</p>
+		<div class="hero-actions">
+			<a class="button button-primary" href="/contact">Get in touch</a>
+			<a class="button" href="/quality">See the test results</a>
+		</div>
+	</section>
+
+	{
+		featured.length > 0 && (
+			<section aria-labelledby="featured-heading">
+				<h2 id="featured-heading">Featured work</h2>
+				<div class="entry-list">
+					{featured.map((item) => (
+						<EntryCard
+							kind={item.kind}
+							level={3}
+							title={item.title}
+							href={item.href}
+							summary={item.summary}
+							date={item.date}
+							tags={item.tags}
+						/>
+					))}
+				</div>
+			</section>
+		)
+	}
 </BaseLayout>
