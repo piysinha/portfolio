@@ -28,9 +28,10 @@ export default defineConfig({
 	webServer: deployedUrl
 		? undefined
 		: {
-				// --ignore-lock keeps Astro 7 from auto-backgrounding the server when run by a coding agent.
-				command: `npm run build && npm run preview -- --port ${port} --ignore-lock`,
+				// Serve the build with Cloudflare's own local Pages server, so routing matches production.
+				command: `npm run build && npx wrangler pages dev dist --port ${port}`,
 				url: `http://localhost:${port}`,
+				env: { WRANGLER_SEND_METRICS: 'false' },
 				reuseExistingServer: !process.env.CI,
 			},
 });

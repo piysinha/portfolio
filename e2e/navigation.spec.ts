@@ -13,12 +13,12 @@ for (const target of sitePages) {
 		await expect(page).toHaveTitle(target.title);
 		await expect(page.getByRole('heading', { level: 1 })).toHaveText(target.heading);
 	});
+
+	test(`header marks ${target.link} as the current page`, async ({ page }) => {
+		await page.goto(target.path);
+
+		const nav = await openMainNav(page);
+		await expect(nav.getByRole('link', { name: target.link })).toHaveAttribute('aria-current', 'page');
+		await expect(nav.locator('[aria-current]')).toHaveCount(1);
+	});
 }
-
-test('header marks the current page', async ({ page }) => {
-	await page.goto('/projects');
-
-	const nav = await openMainNav(page);
-	await expect(nav.getByRole('link', { name: 'Projects' })).toHaveAttribute('aria-current', 'page');
-	await expect(nav.locator('[aria-current]')).toHaveCount(1);
-});
