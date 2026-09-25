@@ -1,6 +1,6 @@
 import { expect, test } from '@playwright/test';
 
-test('Visitor sees who owns the site on Home', async ({ page }) => {
+test('Visitor sees who owns the site on Home', { tag: '@smoke' }, async ({ page }) => {
 	await page.goto('/');
 
 	await expect(page).toHaveTitle('Piyush Sinha');
@@ -8,7 +8,7 @@ test('Visitor sees who owns the site on Home', async ({ page }) => {
 	await expect(page.getByText('SDET at Aumni Techworks')).toBeVisible();
 });
 
-test('Home fits the viewport without sideways scrolling', async ({ page }) => {
+test('Home fits the viewport without sideways scrolling', { tag: '@smoke' }, async ({ page }) => {
 	await page.goto('/');
 
 	const overflow = await page.evaluate(
