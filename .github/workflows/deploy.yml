@@ -62,7 +62,7 @@ jobs:
         run: |
           if [ -z "$PREVIEW_URL" ]; then echo "No preview deployment URL from wrangler" >&2; exit 1; fi
           scripts/wait-for-url.sh "$PREVIEW_URL"
-      - run: npx playwright install --with-deps chromium
+      - run: npx playwright install --with-deps chromium firefox webkit
       - name: Test preview
         env:
           BASE_URL: ${{ steps.preview.outputs.deployment-url }}
@@ -72,6 +72,17 @@ jobs:
         with:
           name: gate-report
           path: playwright-report/
+          retention-days: 14
+      - name: Screenshot-test preview (Docker)
+        env:
+          BASE_URL: ${{ steps.preview.outputs.deployment-url }}
+          PLAYWRIGHT_HTML_OUTPUT_DIR: visual-report
+        run: npm run test:visual
+      - uses: actions/upload-artifact@v7
+        if: ${{ !cancelled() }}
+        with:
+          name: gate-visual-report
+          path: visual-report/
           retention-days: 14
 
   promote:
@@ -112,7 +123,7 @@ jobs:
       - name: Test production
         env:
           BASE_URL: ${{ env.PRODUCTION_URL }}
-        run: npx playwright test --grep @smoke
+        run: npx playwright test --grep @smoke --project chromium --project mobile-chrome
       - uses: actions/upload-artifact@v7
         if: ${{ !cancelled() }}
         with:

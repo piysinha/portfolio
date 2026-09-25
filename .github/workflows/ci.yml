@@ -15,11 +15,21 @@ jobs:
       - run: npm ci
       - run: npm run check
       - run: npm test
-      - run: npx playwright install --with-deps chromium
+      - run: npx playwright install --with-deps chromium firefox webkit
       - run: npm run test:e2e
       - uses: actions/upload-artifact@v7
         if: ${{ !cancelled() }}
         with:
           name: playwright-report
           path: playwright-report/
+          retention-days: 14
+      - name: Screenshot tests (Docker)
+        env:
+          PLAYWRIGHT_HTML_OUTPUT_DIR: visual-report
+        run: npm run test:visual
+      - uses: actions/upload-artifact@v7
+        if: ${{ !cancelled() }}
+        with:
+          name: visual-report
+          path: visual-report/
           retention-days: 14

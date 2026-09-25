@@ -1,0 +1,41 @@
+---
+import Header from '../components/Header.astro';
+import { pageTitle } from '../lib/site';
+import '../styles/global.css';
+
+interface Props {
+	/** Page name for the browser tab; omit on Home. */
+	title?: string;
+}
+
+const { title } = Astro.props;
+---
+
+<html lang="en">
+	<head>
+		<meta charset="utf-8" />
+		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+		<link rel="icon" href="/favicon.ico" />
+		<meta name="viewport" content="width=device-width, initial-scale=1" />
+		<meta name="generator" content={Astro.generator} />
+		<script is:inline>
+			// Runs before first paint: mark JS support and apply the stored or system theme, so there is no flash.
+			document.documentElement.classList.add('js');
+			let theme;
+			try {
+				theme = localStorage.getItem('theme');
+			} catch {}
+			if (theme !== 'dark' && theme !== 'light') {
+				theme = matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+			}
+			document.documentElement.dataset.theme = theme;
+		</script>
+		<title>{pageTitle(title)}</title>
+	</head>
+	<body>
+		<Header />
+		<main>
+			<slot />
+		</main>
+	</body>
+</html>

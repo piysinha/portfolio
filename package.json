@@ -12,7 +12,8 @@
     "check": "astro check",
     "test": "vitest run",
     "test:e2e": "playwright test",
-    "astro": "astro"
+    "astro": "astro",
+    "test:visual": "scripts/visual-tests.sh"
   },
   "dependencies": {
     "astro": "^7.3.5"
@@ -22,6 +23,7 @@
   },
   "devDependencies": {
     "@astrojs/check": "^0.9.10",
+    "@axe-core/playwright": "^4.13.0",
     "@playwright/test": "^1.63.0",
     "@types/node": "^24.13.6",
     "typescript": "^6.0.3",
