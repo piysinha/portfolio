@@ -1,8 +1,25 @@
 ---
+import { getCollection } from 'astro:content';
+import EntryCard from '../components/EntryCard.astro';
 import BaseLayout from '../layouts/BaseLayout.astro';
+import { newestFirst } from '../lib/dates';
+
+const projects = newestFirst(await getCollection('projects'));
 ---
 
 <BaseLayout title="Projects">
 	<h1>Projects</h1>
-	<p>Coming soon.</p>
+	<div class="entry-list">
+		{
+			projects.map((project) => (
+				<EntryCard
+					title={project.data.title}
+					href={`/projects/${project.id}`}
+					summary={project.data.summary}
+					date={project.data.date}
+					tags={project.data.tags}
+				/>
+			))
+		}
+	</div>
 </BaseLayout>
