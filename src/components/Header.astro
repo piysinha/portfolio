@@ -1,0 +1,65 @@
+---
+import { owner, sections } from '../lib/site';
+
+const current = Astro.url.pathname.replace(/\/$/, '') || '/';
+---
+
+<header class="site-header">
+	<a class="brand" href="/">{owner.name}</a>
+	<button class="theme-toggle" type="button" aria-pressed="false">Dark theme</button>
+	<button class="menu-button" type="button" aria-expanded="false" aria-controls="main-nav-links">Menu</button>
+	<nav aria-label="Main">
+		<ul id="main-nav-links">
+			{
+				sections.map((section) => (
+					<li>
+						<a href={section.path} aria-current={section.path === current ? 'page' : undefined}>
+							{section.name}
+						</a>
+					</li>
+				))
+			}
+		</ul>
+	</nav>
+</header>
+
+<script>
+	const button = document.querySelector<HTMLButtonElement>('.menu-button');
+	const header = document.querySelector<HTMLElement>('.site-header');
+
+	function setOpen(open: boolean) {
+		button?.setAttribute('aria-expanded', String(open));
+		header?.toggleAttribute('data-menu-open', open);
+	}
+
+	button?.addEventListener('click', () => setOpen(button.getAttribute('aria-expanded') !== 'true'));
+
+	document.addEventListener('keydown', (event) => {
+		if (event.key === 'Escape' && button?.getAttribute('aria-expanded') === 'true') {
+			setOpen(false);
+			button.focus();
+		}
+	});
+</script>
+
+<script>
+	const toggle = document.querySelector<HTMLButtonElement>('.theme-toggle');
+	const root = document.documentElement;
+
+	function applyTheme(theme: 'dark' | 'light') {
+		root.dataset.theme = theme;
+		toggle?.setAttribute('aria-pressed', String(theme === 'dark'));
+	}
+
+	applyTheme(root.dataset.theme === 'dark' ? 'dark' : 'light');
+
+	toggle?.addEventListener('click', () => {
+		const next = root.dataset.theme === 'dark' ? 'light' : 'dark';
+		applyTheme(next);
+		try {
+			localStorage.setItem('theme', next);
+		} catch {
+			// Storage can be blocked (private mode); the theme still applies for this page.
+		}
+	});
+</script>
