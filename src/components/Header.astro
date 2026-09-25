@@ -1,7 +1,8 @@
 ---
 import { owner, sections } from '../lib/site';
 
-const current = Astro.url.pathname.replace(/\/$/, '') || '/';
+// With build.format 'file', pages build at paths like /index.html and /projects.html; nav links use clean URLs.
+const current = Astro.url.pathname.replace(/(\/index)?(\.html)?\/?$/, '') || '/';
 ---
 
 <header class="site-header">
