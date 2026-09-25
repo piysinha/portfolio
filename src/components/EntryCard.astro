@@ -1,0 +1,19 @@
+---
+import EntryMeta from './EntryMeta.astro';
+
+interface Props {
+	title: string;
+	href: string;
+	summary: string;
+	date: Date;
+	tags: string[];
+}
+
+const { title, href, summary, date, tags } = Astro.props;
+---
+
+<article class="entry-card">
+	<h2><a href={href}>{title}</a></h2>
+	<p data-testid="summary">{summary}</p>
+	<EntryMeta date={date} tags={tags} />
+</article>

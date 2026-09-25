@@ -1,0 +1,17 @@
+---
+import { displayDate, isoDate } from '../lib/dates';
+
+interface Props {
+	date: Date;
+	tags: string[];
+}
+
+const { date, tags } = Astro.props;
+---
+
+<div class="entry-meta">
+	<time datetime={isoDate(date)}>{displayDate(date)}</time>
+	<ul aria-label="Tags" class="tags">
+		{tags.map((tag) => <li>{tag}</li>)}
+	</ul>
+</div>

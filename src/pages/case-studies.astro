@@ -1,8 +1,25 @@
 ---
+import { getCollection } from 'astro:content';
+import EntryCard from '../components/EntryCard.astro';
 import BaseLayout from '../layouts/BaseLayout.astro';
+import { newestFirst } from '../lib/dates';
+
+const caseStudies = newestFirst(await getCollection('caseStudies'));
 ---
 
 <BaseLayout title="Case studies">
 	<h1>Case studies</h1>
-	<p>Coming soon.</p>
+	<div class="entry-list">
+		{
+			caseStudies.map((caseStudy) => (
+				<EntryCard
+					title={caseStudy.data.title}
+					href={`/case-studies/${caseStudy.id}`}
+					summary={caseStudy.data.problem}
+					date={caseStudy.data.date}
+					tags={caseStudy.data.tags}
+				/>
+			))
+		}
+	</div>
 </BaseLayout>
