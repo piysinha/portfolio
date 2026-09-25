@@ -4,7 +4,7 @@ name: Deploy
 # See docs/adr/0002-gated-deploys-and-separate-reports-site.md.
 on:
   push:
-    branches: [main, "deploy-test/**"] # TEMP: deploy-test branches verify the gate; remove before merge
+    branches: [main]
 
 concurrency:
   group: deploy-production
