@@ -283,3 +283,20 @@ h1 {
 	padding: 0;
 	list-style: none;
 }
+
+/* Text for screen readers only. */
+.sr-only {
+	position: absolute;
+	width: 1px;
+	height: 1px;
+	overflow: hidden;
+	clip-path: inset(50%);
+	white-space: nowrap;
+}
+
+.external-icon {
+	display: inline-block;
+	margin-left: 0.15em;
+	font-size: 0.85em;
+	text-decoration: none;
+}
