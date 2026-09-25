@@ -17,6 +17,7 @@ export default defineConfig({
 		{ name: 'mobile-chrome', use: { ...devices['Pixel 7'] } },
 	],
 	webServer: {
+		// --ignore-lock keeps Astro 7 from auto-backgrounding the server when run by a coding agent.
 		command: `npm run build && npm run preview -- --port ${port} --ignore-lock`,
 		url: `http://localhost:${port}`,
 		reuseExistingServer: !process.env.CI,
