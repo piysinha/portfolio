@@ -1,0 +1,125 @@
+---
+// A terminal-style replay of this site's own tests. Titles are real test names from e2e/;
+// no counts or timings are shown, because only the Quality dashboard reads real results.
+// Every test runs in all four browser projects, so each label below is true.
+const lines = [
+	['chromium', 'Visitor sees who owns the site on Home'],
+	['firefox', 'Visitor switches theme and the choice sticks across reloads and pages'],
+	['mobile', 'the Menu button is absent on wide screens'],
+	['webkit', 'Visitor downloads the résumé as a PDF'],
+	['chromium', 'every link to another website opens in a new tab, safely'],
+	['firefox', 'a Case study tells its Problem, Approach and Outcome'],
+];
+---
+
+<figure class="tile run" aria-label="Replay of this site's own tests">
+	<div class="run-bar" aria-hidden="true"><span></span><span></span><span></span></div>
+	<p class="run-cmd"><span class="run-prompt">$</span> <span class="run-typed">npx playwright test</span></p>
+	<ol class="run-lines">
+		{
+			lines.map(([browser, name], i) => (
+				<li style={`--l:${i}`}>
+					<span class="run-ok" aria-hidden="true">✓</span>
+					<span class="run-browser">[{browser}]</span>
+					<span class="run-name">{name}</span>
+				</li>
+			))
+		}
+		<li class="run-summary" style={`--l:${lines.length}`}>
+			<strong>Gate run passed</strong> · promoted to production
+		</li>
+	</ol>
+</figure>
+
+<style>
+	.run {
+		margin: 0;
+		overflow: hidden;
+		background: rgb(3 6 12 / 0.85) !important;
+		font-family: var(--font-mono);
+		font-size: 0.78rem;
+	}
+	.run-bar {
+		display: flex;
+		gap: 0.4rem;
+		padding: 0.75rem 1rem;
+		border-bottom: 1px solid var(--ink-line);
+	}
+	.run-bar span {
+		width: 0.65rem;
+		height: 0.65rem;
+		border-radius: 50%;
+		background: #ff5f57;
+	}
+	.run-bar span:nth-child(2) {
+		background: #febc2e;
+	}
+	.run-bar span:nth-child(3) {
+		background: #28c840;
+	}
+	.run-cmd {
+		margin: 0;
+		padding: 1rem 1rem 0.25rem;
+		white-space: nowrap;
+	}
+	.run-prompt {
+		color: var(--teal);
+	}
+	.run-typed {
+		display: inline-block;
+		box-sizing: content-box;
+		width: 19ch;
+		overflow: hidden;
+		vertical-align: bottom;
+		border-right: 2px solid var(--teal);
+		animation:
+			run-type 1s steps(19) 0.5s both,
+			run-caret 0.8s steps(1) 1.5s 3;
+	}
+	@keyframes run-type {
+		from {
+			width: 0;
+		}
+	}
+	@keyframes run-caret {
+		50% {
+			border-color: transparent;
+		}
+	}
+	.run-lines {
+		display: grid;
+		gap: 0.4rem;
+		margin: 0;
+		padding: 0.5rem 1rem 1.25rem;
+		list-style: none;
+	}
+	.run-lines li {
+		display: flex;
+		gap: 0.5rem;
+		min-width: 0;
+		white-space: nowrap;
+		animation: run-line 0.3s ease both;
+		animation-delay: calc(1.6s + var(--l) * 0.28s);
+	}
+	@keyframes run-line {
+		from {
+			opacity: 0;
+			transform: translateX(-6px);
+		}
+	}
+	.run-ok {
+		color: var(--pass);
+	}
+	.run-browser {
+		color: var(--ink-muted);
+	}
+	.run-name {
+		min-width: 0;
+		overflow: hidden;
+		text-overflow: ellipsis;
+	}
+	.run-summary {
+		margin-top: 0.4rem;
+		color: var(--pass);
+	}
+</style>

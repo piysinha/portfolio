@@ -36,18 +36,18 @@ test('a chosen theme applies before any deferred script runs, so there is no fla
 	await page.goto('/');
 	await darkToggle(page).click();
 
-	// readyState turns "interactive" once parsing ends and before module scripts run,
-	// so only the inline head script can have set the theme by then.
+	// readyState turns "interactive" once parsing ends and before module scripts run, so only the
+	// inline head script can have chosen the theme by then. (The stylesheet may still be loading at
+	// that instant, but it is render-blocking, so the first paint already uses the chosen theme.)
 	await page.addInitScript(() => {
 		document.addEventListener('readystatechange', () => {
 			if (document.readyState === 'interactive') {
-				(window as unknown as { schemeAtParse: string }).schemeAtParse = getComputedStyle(
-					document.documentElement,
-				).colorScheme;
+				(window as unknown as { themeAtParse?: string }).themeAtParse = document.documentElement.dataset.theme;
 			}
 		});
 	});
 	await page.reload();
 
-	expect(await page.evaluate(() => (window as unknown as { schemeAtParse: string }).schemeAtParse)).toBe('dark');
+	expect(await page.evaluate(() => (window as unknown as { themeAtParse?: string }).themeAtParse)).toBe('dark');
+	expect(await renderedScheme(page)).toBe('dark');
 });

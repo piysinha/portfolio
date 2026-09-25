@@ -1,45 +1,285 @@
 ---
 import { getCollection } from 'astro:content';
 import EntryCard from '../components/EntryCard.astro';
+import TestRunReplay from '../components/TestRunReplay.astro';
 import BaseLayout from '../layouts/BaseLayout.astro';
 import { featuredWork } from '../lib/featured';
 import { owner } from '../lib/site';
 
 const featured = featuredWork(await getCollection('projects'), await getCollection('caseStudies'));
+const tools = ['Playwright', 'TypeScript', 'Cucumber (BDD)', 'API testing', 'GitHub Actions', 'Jenkins', 'AWS', 'Java', 'Spring Boot', 'SQL'];
 ---
 
 <BaseLayout>
-	<section class="hero">
-		<h1>{owner.name}</h1>
-		<p class="hero-role">{owner.role}</p>
-		<p class="hero-intro" data-testid="intro">
-			I've spent 4.5+ years building Playwright + TypeScript automation frameworks for web apps and APIs, and I'm
-			growing into backend development with Java and Spring Boot. This site runs its own test suite on every deploy.
-		</p>
-		<div class="hero-actions">
-			<a class="button button-primary" href="/contact">Get in touch</a>
-			<a class="button" href="/quality">See the test results</a>
-		</div>
-	</section>
+	<div slot="hero" class="bento">
+		<section class="tile intro" style="--i:0">
+			<p class="eyebrow">SDET · Playwright + TypeScript</p>
+			<h1>{owner.name}</h1>
+			<p class="role">{owner.role}</p>
+			<p class="intro-text" data-testid="intro">
+				I've spent 4.5+ years building Playwright + TypeScript automation frameworks for web apps and APIs, and I'm
+				growing into backend development with Java and Spring Boot. This site runs its own test suite on every deploy.
+			</p>
+			<div class="actions">
+				<a class="button button-primary" href="/contact">Get in touch</a>
+				<a class="button" href="/quality">See the test results <span aria-hidden="true">→</span></a>
+			</div>
+		</section>
 
-	{
-		featured.length > 0 && (
-			<section aria-labelledby="featured-heading">
-				<h2 id="featured-heading">Featured work</h2>
-				<div class="entry-list">
-					{featured.map((item) => (
-						<EntryCard
-							kind={item.kind}
-							level={3}
-							title={item.title}
-							href={item.href}
-							summary={item.summary}
-							date={item.date}
-							tags={item.tags}
-						/>
-					))}
-				</div>
-			</section>
-		)
-	}
+		<div class="replay" style="--i:1"><TestRunReplay /></div>
+
+		<a class="tile stat status" href="/quality" style="--i:2">
+			<span class="label">This build</span>
+			<span class="pill"><span class="dot" aria-hidden="true"></span>Gate run passed</span>
+			<span class="big">4 browsers</span>
+			<span class="sub">End-to-end, accessibility and screenshot tests before every release</span>
+		</a>
+		<div class="tile stat" style="--i:3">
+			<span class="label">Experience</span>
+			<span class="big"><span class="sr-only">4.5+ years</span><span aria-hidden="true"><span data-count="4.5" data-decimals="1">4.5</span>+ yrs</span></span>
+			<span class="sub">building test automation</span>
+		</div>
+		<div class="tile stat" style="--i:4">
+			<span class="label">Regression run</span>
+			<span class="big">4h → 1.5h</span>
+			<span class="sub">previous role</span>
+		</div>
+		<div class="tile stat" style="--i:5">
+			<span class="label">Flaky failures</span>
+			<span class="big"><span class="sr-only">About 55% fewer</span><span aria-hidden="true">~<span data-count="55">55</span>% fewer</span></span>
+			<span class="sub">previous role</span>
+		</div>
+
+		{
+			featured.length > 0 && (
+				<section class="featured" aria-labelledby="featured-heading" style="--i:6">
+					<h2 id="featured-heading" class="label">Featured work</h2>
+					<div class="entry-list">
+						{featured.map((item) => (
+							<EntryCard
+								kind={item.kind}
+								level={3}
+								title={item.title}
+								href={item.href}
+								summary={item.summary}
+								date={item.date}
+								tags={item.tags}
+							/>
+						))}
+					</div>
+				</section>
+			)
+		}
+
+		<div class="tile tools" style="--i:7">
+			<p class="label">Daily tools</p>
+			<div class="marquee">
+				<ul>
+					{tools.map((tool) => <li>{tool}</li>)}
+					{tools.map((tool) => <li aria-hidden="true">{tool}</li>)}
+				</ul>
+			</div>
+		</div>
+	</div>
 </BaseLayout>
+
+<script>
+	// Numbers tick up once the tiles have risen in. Screen readers get the final value from sr-only text.
+	if (!matchMedia('(prefers-reduced-motion: reduce)').matches) {
+		for (const el of document.querySelectorAll<HTMLElement>('[data-count]')) {
+			const target = Number(el.dataset.count);
+			const decimals = Number(el.dataset.decimals ?? 0);
+			const begin = performance.now() + 600;
+			el.textContent = (0).toFixed(decimals);
+			const tick = (now: number) => {
+				const t = Math.min(Math.max((now - begin) / 1300, 0), 1);
+				el.textContent = (target * (1 - Math.pow(1 - t, 3))).toFixed(decimals);
+				if (t < 1) requestAnimationFrame(tick);
+			};
+			requestAnimationFrame(tick);
+		}
+	}
+</script>
+
+<style>
+	.bento {
+		display: grid;
+		grid-template-columns: repeat(2, 1fr);
+		gap: 0.9rem;
+		padding-bottom: 1rem;
+	}
+	/* Phones: two stat tiles per row; everything else full width. */
+	.bento > .intro,
+	.bento > .replay,
+	.bento > .featured,
+	.bento > .tools {
+		grid-column: span 2;
+	}
+	.bento > .tools {
+		align-self: start;
+	}
+	.bento > * {
+		animation: rise 0.7s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+		animation-delay: calc(var(--i) * 90ms);
+	}
+	@keyframes rise {
+		from {
+			opacity: 0;
+			transform: translateY(18px) scale(0.98);
+		}
+	}
+	@media (min-width: 44rem) {
+		.bento {
+			grid-template-columns: repeat(6, 1fr);
+		}
+		.bento > * {
+			grid-column: span 3;
+		}
+		.bento > .status {
+			grid-column: span 3;
+		}
+		.bento > .intro,
+		.bento > .replay,
+		.bento > .featured,
+		.bento > .tools {
+			grid-column: span 6;
+		}
+	}
+	@media (min-width: 64rem) {
+		.bento {
+			grid-template-columns: repeat(12, 1fr);
+		}
+		.bento > .intro {
+			grid-column: span 7;
+		}
+		.bento > .replay {
+			grid-column: span 5;
+		}
+		.bento > .featured,
+		.bento > .tools {
+			grid-column: span 6;
+		}
+	}
+	.replay {
+		display: grid;
+	}
+	.intro {
+		display: grid;
+		align-content: start;
+		gap: 0.8rem;
+		padding: 2rem;
+	}
+	.intro > * {
+		margin: 0;
+	}
+	.intro h1 {
+		font-size: clamp(2.75rem, 7vw, 4.75rem);
+		line-height: 1;
+		letter-spacing: -0.035em;
+		background: linear-gradient(100deg, #fff 30%, var(--teal) 70%, var(--indigo));
+		-webkit-background-clip: text;
+		background-clip: text;
+		color: transparent;
+	}
+	.role {
+		color: #fff;
+		font-weight: 600;
+	}
+	.intro-text {
+		max-width: 38rem;
+		color: var(--ink-muted);
+	}
+	.actions {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 0.7rem;
+		margin-top: 0.4rem !important;
+	}
+	.stat {
+		display: grid;
+		align-content: start;
+		gap: 0.45rem;
+		padding: 1.25rem;
+		color: var(--ink-fg);
+		text-decoration: none;
+	}
+	a.stat:hover {
+		transform: translateY(-3px);
+	}
+	.pill {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.45rem;
+		width: fit-content;
+		padding: 0.15rem 0.65rem;
+		border-radius: 999px;
+		background: rgb(63 185 80 / 0.15);
+		color: var(--pass);
+		font-size: 0.8rem;
+		font-weight: 600;
+	}
+	.dot {
+		width: 0.5rem;
+		height: 0.5rem;
+		border-radius: 50%;
+		background: var(--pass);
+		animation: pulse 1.6s ease-in-out infinite;
+	}
+	@keyframes pulse {
+		50% {
+			box-shadow: 0 0 0 6px rgb(63 185 80 / 0.2);
+		}
+	}
+	.big {
+		font-size: clamp(1.4rem, 5vw, 1.9rem);
+		font-weight: 700;
+		letter-spacing: -0.03em;
+		line-height: 1.15;
+		font-variant-numeric: tabular-nums;
+		color: #fff;
+	}
+	.sub {
+		color: var(--ink-muted);
+		font-size: 0.85rem;
+	}
+	.featured {
+		display: grid;
+		align-content: start;
+		gap: 0.6rem;
+	}
+	.featured h2 {
+		margin: 0.25rem 0 0;
+	}
+	.tools {
+		display: grid;
+		align-content: start;
+		gap: 0.6rem;
+		padding: 1.25rem;
+		overflow: hidden;
+	}
+	.marquee {
+		overflow: hidden;
+		mask-image: linear-gradient(90deg, transparent, #000 10%, #000 90%, transparent);
+	}
+	.marquee ul {
+		display: flex;
+		gap: 0.5rem;
+		width: max-content;
+		margin: 0;
+		padding: 0;
+		list-style: none;
+		animation: scroll 30s linear infinite;
+	}
+	.marquee li {
+		padding: 0.3rem 0.75rem;
+		border: 1px solid var(--ink-line);
+		border-radius: 999px;
+		background: var(--ink-glass);
+		font-size: 0.85rem;
+	}
+	@keyframes scroll {
+		to {
+			transform: translateX(-50%);
+		}
+	}
+</style>

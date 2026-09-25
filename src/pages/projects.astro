@@ -8,7 +8,11 @@ const projects = newestFirst(await getCollection('projects'));
 ---
 
 <BaseLayout title="Projects">
-	<h1>Projects</h1>
+	<Fragment slot="hero">
+		<p class="eyebrow">Work</p>
+		<h1>Projects</h1>
+		<p class="lede">Things I've built, each with its source code.</p>
+	</Fragment>
 	<div class="entry-list">
 		{
 			projects.map((project) => (

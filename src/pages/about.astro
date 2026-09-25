@@ -5,8 +5,16 @@ import { owner } from '../lib/site';
 ---
 
 <BaseLayout title="About">
-	<h1>About</h1>
-	<div class="bio" data-testid="bio">
+	<Fragment slot="hero">
+		<p class="eyebrow">{owner.role}</p>
+		<h1>About</h1>
+		<ul class="about-links">
+			<li><a class="button button-primary" href={owner.resume} download>Download résumé</a></li>
+			<li><ExternalLink class="button" href={owner.links.github}>GitHub</ExternalLink></li>
+			<li><ExternalLink class="button" href={owner.links.linkedin}>LinkedIn</ExternalLink></li>
+		</ul>
+	</Fragment>
+	<div class="prose" data-testid="bio">
 		<p>
 			I'm a Software Development Engineer in Test (SDET) with 4.5+ years building Playwright + TypeScript automation
 			frameworks.
@@ -26,9 +34,4 @@ import { owner } from '../lib/site';
 			Stack Development program, and I hold an AWS Solutions Architect Associate certification.
 		</p>
 	</div>
-	<ul class="about-links">
-		<li><a class="button button-primary" href={owner.resume} download>Download résumé</a></li>
-		<li><ExternalLink href={owner.links.github}>GitHub</ExternalLink></li>
-		<li><ExternalLink href={owner.links.linkedin}>LinkedIn</ExternalLink></li>
-	</ul>
 </BaseLayout>
