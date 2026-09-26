@@ -77,6 +77,7 @@ jobs:
         env:
           BASE_URL: ${{ steps.preview.outputs.deployment-url }}
           PLAYWRIGHT_HTML_OUTPUT_DIR: visual-report
+          PLAYWRIGHT_JSON_OUTPUT_FILE: results/visual.json
         run: npm run test:visual
       - uses: actions/upload-artifact@v7
         if: ${{ !cancelled() }}
@@ -84,6 +85,25 @@ jobs:
           name: gate-visual-report
           path: visual-report/
           retention-days: 14
+      - name: Assemble the Gate run report
+        if: ${{ !cancelled() && hashFiles('results/*.json') != '' }}
+        run: |
+          mkdir -p gate-site
+          [ -d playwright-report ] && cp -R playwright-report/. gate-site/
+          [ -d visual-report ] && cp -R visual-report gate-site/visual
+          true
+      # A publish failure is reported but never blocks promotion: reports are secondary to the release.
+      - name: Publish the Gate run report
+        if: ${{ !cancelled() && hashFiles('results/*.json') != '' }}
+        continue-on-error: true
+        uses: ./.github/actions/publish-report
+        with:
+          kind: gate
+          report-dir: gate-site
+          reports: results/e2e.json,results/visual.json
+          job-status: ${{ job.status }}
+          api-token: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          account-id: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
 
   promote:
     name: Promote to production
@@ -123,6 +143,7 @@ jobs:
       - name: Test production
         env:
           BASE_URL: ${{ env.PRODUCTION_URL }}
+          PLAYWRIGHT_JSON_OUTPUT_FILE: results/smoke.json
         run: npx playwright test --grep @smoke --project chromium --project mobile-chrome
       - uses: actions/upload-artifact@v7
         if: ${{ !cancelled() }}
@@ -130,3 +151,14 @@ jobs:
           name: smoke-report
           path: playwright-report/
           retention-days: 14
+      - name: Publish the Smoke run report
+        if: ${{ !cancelled() && hashFiles('results/smoke.json') != '' }}
+        continue-on-error: true
+        uses: ./.github/actions/publish-report
+        with:
+          kind: smoke
+          report-dir: playwright-report
+          reports: results/smoke.json
+          job-status: ${{ job.status }}
+          api-token: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          account-id: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
