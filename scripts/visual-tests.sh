@@ -9,6 +9,6 @@ version=$(node -p "require('@playwright/test/package.json').version")
 # linux/amd64 matches the GitHub Actions runners that compare against the same screenshots.
 docker run --rm --init --ipc=host --platform linux/amd64 \
 	-v "$PWD":/work -v /work/node_modules -w /work \
-	-e CI -e BASE_URL -e PLAYWRIGHT_HTML_OUTPUT_DIR -e VISUAL=1 \
+	-e CI -e BASE_URL -e PLAYWRIGHT_HTML_OUTPUT_DIR -e PLAYWRIGHT_JSON_OUTPUT_FILE -e VISUAL=1 \
 	"mcr.microsoft.com/playwright:v${version}-noble" \
 	bash -c "npm ci --no-audit --no-fund --loglevel=error && npx playwright test $*"

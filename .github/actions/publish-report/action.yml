@@ -1,0 +1,70 @@
+name: Publish test report
+description: >
+  Deploys a Playwright HTML report to the reports Pages project as its own deployment (a permanent
+  link), records the run in summary.json, and deletes reports trimmed from the 30-run history.
+
+inputs:
+  kind:
+    description: gate or smoke
+    required: true
+  report-dir:
+    description: Folder holding the HTML report to publish
+    required: true
+  reports:
+    description: Comma-separated Playwright JSON report files for this run
+    required: true
+  job-status:
+    description: The calling job's status (job.status)
+    required: true
+  api-token:
+    required: true
+  account-id:
+    required: true
+
+runs:
+  using: composite
+  steps:
+    - name: Deploy the report
+      id: report
+      uses: cloudflare/wrangler-action@v4
+      with:
+        apiToken: ${{ inputs.api-token }}
+        accountId: ${{ inputs.account-id }}
+        wranglerVersion: ${{ env.WRANGLER_VERSION }}
+        command: pages deploy ${{ inputs.report-dir }} --project-name=${{ env.REPORTS_PROJECT }} --branch=${{ inputs.kind }} --commit-dirty=true
+
+    - name: Record the run in summary.json
+      shell: bash
+      run: >
+        node scripts/record-run.ts
+        --kind "${{ inputs.kind }}"
+        --reports "${{ inputs.reports }}"
+        --report-url "${{ steps.report.outputs.deployment-url }}"
+        --deployment-id "${{ steps.report.outputs.pages-deployment-id }}"
+        --run-url "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+        --commit "${{ github.sha }}"
+        --job-status "${{ inputs.job-status }}"
+        --previous-url "https://${{ env.REPORTS_PROJECT }}.pages.dev/summary.json"
+        --out reports-site
+        --dropped-out results/dropped.txt
+
+    - name: Deploy the summary
+      uses: cloudflare/wrangler-action@v4
+      with:
+        apiToken: ${{ inputs.api-token }}
+        accountId: ${{ inputs.account-id }}
+        wranglerVersion: ${{ env.WRANGLER_VERSION }}
+        command: pages deploy reports-site --project-name=${{ env.REPORTS_PROJECT }} --branch=main --commit-dirty=true
+
+    - name: Delete reports trimmed from the history
+      shell: bash
+      env:
+        CLOUDFLARE_API_TOKEN: ${{ inputs.api-token }}
+        CLOUDFLARE_ACCOUNT_ID: ${{ inputs.account-id }}
+      run: |
+        while read -r id; do
+          [ -z "$id" ] && continue
+          curl -fsS -X DELETE -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" \
+            "https://api.cloudflare.com/client/v4/accounts/$CLOUDFLARE_ACCOUNT_ID/pages/projects/$REPORTS_PROJECT/deployments/$id?force=true" >/dev/null \
+            && echo "Deleted deployment $id"
+        done < results/dropped.txt
