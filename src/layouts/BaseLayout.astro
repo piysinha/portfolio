@@ -88,8 +88,9 @@ const { title, description = owner.description } = Astro.props;
 			import { webAnalyticsToken } from '../lib/site';
 
 			if (shouldCountVisit(webAnalyticsToken, location.hostname, navigator.webdriver)) {
+				// As Cloudflare's own snippet loads it: a module script with its settings in data-cf-beacon.
 				const beacon = document.createElement('script');
-				beacon.defer = true;
+				beacon.type = 'module';
 				beacon.src = beaconSrc;
 				beacon.dataset.cfBeacon = JSON.stringify({ token: webAnalyticsToken });
 				document.head.append(beacon);
