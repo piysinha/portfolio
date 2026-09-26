@@ -4,7 +4,7 @@
 import { replayLines } from '../lib/test-run-replay';
 ---
 
-<figure class="tile run" aria-label="Replay of this site's own tests">
+<figure class="tile run is-playing" aria-label="Replay of this site's own tests">
 	<div class="run-bar" aria-hidden="true"><span></span><span></span><span></span></div>
 	<p class="run-cmd"><span class="run-prompt">$</span> <span class="run-typed">npx playwright test</span></p>
 	<ol class="run-lines">
@@ -22,6 +22,40 @@ import { replayLines } from '../lib/test-run-replay';
 		</li>
 	</ol>
 </figure>
+
+<script>
+	// The first replay plays from CSS on load. After that, replay on a loop, but only while the
+	// terminal is on screen and the tab is visible, and never for Visitors who prefer reduced motion.
+	const CYCLE_MS = 9000; // one replay takes about 4s, then the finished run stays up for a while
+	const run = document.querySelector<HTMLElement>('.run');
+	const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)');
+	let onScreen = false;
+	let timer: ReturnType<typeof setInterval> | undefined;
+
+	function replay() {
+		run?.classList.remove('is-playing');
+		void run?.offsetWidth; // restart the CSS animations
+		run?.classList.add('is-playing');
+	}
+
+	function update() {
+		const shouldLoop = onScreen && !document.hidden && !reducedMotion.matches;
+		if (shouldLoop && !timer) timer = setInterval(replay, CYCLE_MS);
+		if (!shouldLoop && timer) {
+			clearInterval(timer);
+			timer = undefined;
+		}
+	}
+
+	if (run) {
+		new IntersectionObserver(([entry]) => {
+			onScreen = entry.isIntersecting;
+			update();
+		}).observe(run);
+		document.addEventListener('visibilitychange', update);
+		reducedMotion.addEventListener('change', update);
+	}
+</script>
 
 <style>
 	:global(.page-hero) .run.tile {
@@ -66,6 +100,8 @@ import { replayLines } from '../lib/test-run-replay';
 		overflow: hidden;
 		vertical-align: bottom;
 		border-right: 2px solid var(--teal);
+	}
+	.is-playing .run-typed {
 		animation:
 			run-type 1s steps(19) 0.5s both,
 			run-caret 0.8s steps(1) 1.5s 3;
@@ -92,6 +128,8 @@ import { replayLines } from '../lib/test-run-replay';
 		gap: 0.5rem;
 		min-width: 0;
 		white-space: nowrap;
+	}
+	.is-playing .run-lines li {
 		animation: run-line 0.3s ease both;
 		animation-delay: calc(1.6s + var(--l) * 0.28s);
 	}
