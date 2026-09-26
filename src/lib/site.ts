@@ -1,9 +1,13 @@
 export const owner = {
 	name: 'Piyush Sinha',
 	role: 'SDET at Aumni Techworks',
+	location: 'Pune, India',
+	description:
+		'Piyush Sinha is an SDET in Pune, India, building Playwright and TypeScript test automation for web apps and APIs.',
 	links: {
 		github: 'https://github.com/piysinha',
 		linkedin: 'https://www.linkedin.com/in/piyush-sinha-sdet',
+		source: 'https://github.com/piysinha/portfolio',
 	},
 	resume: '/piyush-sinha-resume.pdf',
 };

@@ -162,7 +162,8 @@ test.describe('without JavaScript', () => {
 		await page.goto('/contact');
 
 		await expect(sendButton(page)).toBeHidden();
-		await expect(page.getByRole('main').getByRole('link', { name: 'LinkedIn (opens in a new tab)' })).toHaveAttribute(
+		const note = page.getByRole('main').locator('p', { hasText: 'The contact form needs JavaScript' });
+		await expect(note.getByRole('link', { name: 'LinkedIn (opens in a new tab)' })).toHaveAttribute(
 			'href',
 			'https://www.linkedin.com/in/piyush-sinha-sdet',
 		);

@@ -9,9 +9,8 @@ const kinds = [
 ] as const;
 ---
 
-<BaseLayout title="Quality dashboard">
+<BaseLayout title="Quality dashboard" description="The real, latest test results for this site: every release is tested in Chromium, Firefox, WebKit and on a phone before it goes live.">
 	<Fragment slot="hero">
-		<p class="eyebrow">Quality</p>
 		<h1>Quality dashboard</h1>
 		<p class="lede">
 			Every release of this site is tested before it goes live. These are the real results, loaded from the reports
@@ -24,7 +23,7 @@ const kinds = [
 	<div class="cards">
 		{
 			kinds.map(({ kind, name, what }) => (
-				<section class="tile run-card" aria-labelledby={`${kind}-heading`}>
+				<section class="run-card" aria-labelledby={`${kind}-heading`}>
 					<h2 id={`${kind}-heading`}>{name}</h2>
 					<p class="run-what">{what}</p>
 					<div class="run-body" data-card={kind}>
@@ -113,7 +112,7 @@ const kinds = [
 			el('p', { className: 'counts' }, `${passed} passed · ${failed} failed · ${flaky} flaky · ${skipped} skipped`),
 			el('p', { className: 'muted' }, `Took ${run.duration} · commit `, externalLink(run.commitUrl, run.commit)),
 			el('ul', { className: 'tags', ariaLabel: 'Browsers' }, ...run.projects.map((project) => el('li', {}, project))),
-			el('p', { className: 'run-links' }, externalLink(run.reportUrl, 'Open report', 'button button-primary'), externalLink(run.runUrl, 'GitHub run', 'button')),
+			el('p', { className: 'run-links' }, externalLink(run.reportUrl, 'Open report', 'btn btn-primary'), externalLink(run.runUrl, 'GitHub run', 'btn btn-secondary')),
 		);
 	}
 
@@ -216,23 +215,27 @@ const kinds = [
 <style>
 	.overall {
 		max-width: 46rem;
-		margin: 1.25rem 0 0;
-		padding: 0.75rem 1rem;
-		border: 1px solid var(--ink-line);
-		border-left: 4px solid var(--ink-muted);
+		margin: 1.75rem 0 0;
+		padding: 0.9rem 1.1rem;
+		border: 1px solid var(--rule);
+		border-left: 5px solid var(--ink-2);
 		border-radius: 0.75rem;
-		background: var(--ink-glass);
-		color: var(--ink-fg);
+		background: var(--surface);
+		color: var(--ink);
 	}
 	.overall[data-state='healthy'] {
-		border-left-color: var(--status-good);
+		border-left-color: var(--pass);
 	}
 	.overall[data-state='production-failing'],
 	.overall[data-state='release-blocked'] {
-		border-left-color: var(--status-critical);
+		border-left-color: var(--fail);
 	}
 	.overall :global(strong) {
-		color: var(--ink-strong);
+		font-weight: 700;
+	}
+	.overall :global(a) {
+		color: var(--accent);
+		text-decoration: underline;
 	}
 	.cards {
 		display: grid;
@@ -247,16 +250,26 @@ const kinds = [
 		display: grid;
 		align-content: start;
 		gap: 0.5rem;
-		padding: 1.5rem;
+		padding: 1.5rem 1.25rem;
+		border: 1px solid var(--rule);
+		border-radius: 1.25rem;
+		background: var(--surface);
+	}
+	@media (min-width: 40rem) {
+		.run-card {
+			padding: 1.75rem;
+		}
 	}
 	.run-card h2 {
-		margin: 0;
-		font-size: 1.35rem;
+		font-size: 1.5rem;
+		font-stretch: 110%;
+		font-weight: 800;
+		letter-spacing: -0.015em;
 	}
 	.run-what,
 	.muted {
 		margin: 0;
-		color: var(--muted);
+		color: var(--ink-2);
 		font-size: 0.9rem;
 	}
 	.run-body {
@@ -272,7 +285,7 @@ const kinds = [
 		flex-wrap: wrap;
 		align-items: center;
 		gap: 0.75rem;
-		color: var(--muted);
+		color: var(--ink-2);
 	}
 	.run-body :global(.counts) {
 		font-family: var(--font-mono);
@@ -290,9 +303,9 @@ const kinds = [
 		align-items: center;
 		gap: 0.4rem;
 		padding: 0.15rem 0.7rem;
-		border: 1px solid var(--border);
+		border: 1px solid var(--rule);
 		border-radius: 999px;
-		color: var(--text);
+		color: var(--ink);
 		font-weight: 600;
 		font-size: 0.85rem;
 	}
@@ -302,14 +315,14 @@ const kinds = [
 		width: 1.1rem;
 		height: 1.1rem;
 		border-radius: 50%;
-		color: #fff;
+		color: var(--surface);
 		font-size: 0.7rem;
 	}
 	:global(.chip.passed .chip-icon) {
-		background: var(--status-good);
+		background: var(--pass);
 	}
 	:global(.chip.failed .chip-icon) {
-		background: var(--status-critical);
+		background: var(--fail);
 	}
 	.history {
 		display: grid;
@@ -317,8 +330,11 @@ const kinds = [
 		margin-top: 2.5rem;
 	}
 	.history > h2 {
-		margin: 0;
-		font-size: 1.35rem;
+		font-size: clamp(1.625rem, 4vw, 2.125rem);
+		font-stretch: 115%;
+		font-weight: 800;
+		letter-spacing: -0.02em;
+		line-height: 1.1;
 	}
 	.trend-head {
 		display: flex;
@@ -328,12 +344,12 @@ const kinds = [
 		gap: 0.25rem 1rem;
 	}
 	.trend h3 {
-		margin: 0;
-		font-size: 1rem;
+		font-size: 1.0625rem;
+		font-weight: 700;
 	}
 	.trend-summary {
 		margin: 0;
-		color: var(--muted);
+		color: var(--ink-2);
 		font-family: var(--font-mono);
 		font-size: 0.85rem;
 	}
@@ -361,26 +377,26 @@ const kinds = [
 	}
 	:global(.bar.passed),
 	.swatch.passed {
-		background: var(--status-good);
+		background: var(--pass);
 	}
 	/* Failed runs carry a texture as well as colour, so pass/fail never depends on hue alone. */
 	:global(.bar.failed),
 	.swatch.failed {
-		background: repeating-linear-gradient(45deg, var(--status-critical) 0 3px, color-mix(in srgb, var(--status-critical) 55%, var(--surface)) 3px 6px);
+		background: repeating-linear-gradient(45deg, var(--fail) 0 3px, color-mix(in srgb, var(--fail) 55%, var(--surface)) 3px 6px);
 	}
 	.legend {
 		display: flex;
 		flex-wrap: wrap;
 		gap: 0.5rem 1.25rem;
 		margin: 0;
-		color: var(--muted);
+		color: var(--ink-2);
 		font-size: 0.85rem;
 	}
 	.legend-item {
 		display: inline-flex;
 		align-items: center;
 		gap: 0.4rem;
-		color: var(--text);
+		color: var(--ink);
 	}
 	.swatch {
 		width: 0.9rem;
@@ -392,18 +408,22 @@ const kinds = [
 		z-index: 10;
 		max-width: min(22rem, calc(100vw - 16px));
 		padding: 0.4rem 0.65rem;
-		border: 1px solid var(--border);
+		border: 1px solid var(--rule);
 		border-radius: 0.5rem;
 		background: var(--surface);
-		box-shadow: var(--shadow);
-		color: var(--text);
+		box-shadow: 0 6px 20px -8px rgb(18 23 53 / 0.35);
+		color: var(--ink);
 		font-size: 0.8rem;
 		pointer-events: none;
 	}
 	.table-view summary {
 		cursor: pointer;
 		color: var(--accent);
-		font-weight: 600;
+		font-weight: 650;
+	}
+	.source :global(a) {
+		color: var(--accent);
+		text-decoration: underline;
 	}
 	.table-scroll {
 		margin-top: 0.75rem;
@@ -418,13 +438,13 @@ const kinds = [
 	th,
 	td {
 		padding: 0.45rem 0.6rem;
-		border-bottom: 1px solid var(--border);
+		border-bottom: 1px solid var(--rule);
 		text-align: left;
 		white-space: nowrap;
 	}
 	.source {
 		margin-top: 2rem;
-		color: var(--muted);
+		color: var(--ink-2);
 		font-size: 0.85rem;
 	}
 </style>

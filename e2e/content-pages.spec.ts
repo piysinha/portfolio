@@ -11,16 +11,19 @@ for (const collection of collections) {
 
 		await expect(entries(page).first()).toBeVisible();
 		for (const entry of await entries(page).all()) {
-			await expect(entry.getByRole('heading', { level: 2 }).getByRole('link')).toBeVisible();
+			await expect(entry.getByRole('heading').getByRole('link')).toBeVisible();
 			await expect(entry.getByTestId('summary')).not.toBeEmpty();
 			await expect(entry.getByRole('list', { name: 'Tags' }).getByRole('listitem').first()).toBeVisible();
+			await expect(entry.locator('time')).toHaveAttribute('datetime', /^\d{4}-\d{2}-\d{2}$/);
 		}
 
-		const dates = await entries(page).locator('time').evaluateAll((times) =>
-			times.map((time) => time.getAttribute('datetime') ?? ''),
-		);
-		expect(dates.every((date) => /^\d{4}-\d{2}-\d{2}$/.test(date))).toBe(true);
-		expect(dates).toEqual([...dates].sort().reverse());
+		// Projects are grouped by area, so order is checked within each list.
+		const lists = page.getByRole('main').getByTestId('entry-list');
+		await expect(lists.first()).toBeVisible();
+		for (const list of await lists.all()) {
+			const dates = await list.locator('time').evaluateAll((times) => times.map((time) => time.getAttribute('datetime') ?? ''));
+			expect(dates).toEqual([...dates].sort().reverse());
+		}
 	});
 
 	test(`Visitor opens a ${collection.name} entry from the list`, { tag: '@smoke' }, async ({ page }) => {
@@ -52,6 +55,13 @@ for (const collection of collections) {
 		});
 	}
 }
+
+test('Projects are grouped by area, test automation first', async ({ page }) => {
+	await page.goto('/projects');
+
+	await expect(page.getByRole('main').getByRole('heading', { level: 2 }).first()).toHaveText('Test automation');
+	await expect(page.getByRole('region', { name: 'Test automation' }).getByRole('article').first()).toBeVisible();
+});
 
 test('a Project links to its source code', async ({ page }) => {
 	for (const path of await entryPaths(page, '/projects')) {

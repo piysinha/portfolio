@@ -4,6 +4,7 @@ import { caseStudySchema, projectSchema } from './content-schemas';
 const validProject = {
 	title: 'This portfolio',
 	summary: 'The site you are reading, tested on every deploy.',
+	area: 'Test automation',
 	tags: ['Astro', 'Playwright'],
 	repo: 'https://github.com/piysinha/portfolio',
 	date: '2026-09-26',
@@ -43,6 +44,10 @@ describe('Project', () => {
 
 	it('rejects a repo value that is not a URL', () => {
 		expect(issuePaths(projectSchema.safeParse({ ...validProject, repo: 'my repo' }))).toEqual(['repo']);
+	});
+
+	it('rejects an area the Projects page does not group by', () => {
+		expect(issuePaths(projectSchema.safeParse({ ...validProject, area: 'Design' }))).toEqual(['area']);
 	});
 });
 

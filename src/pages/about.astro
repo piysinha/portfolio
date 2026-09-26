@@ -2,36 +2,171 @@
 import ExternalLink from '../components/ExternalLink.astro';
 import BaseLayout from '../layouts/BaseLayout.astro';
 import { owner } from '../lib/site';
+
+// Newest first. Earlier roles stay generic: only employers already on the public LinkedIn profile are named.
+const career = [
+	{
+		when: '2026 – now',
+		role: 'SDET',
+		where: 'Aumni Techworks, Pune',
+		what: 'Web-app and API test automation with Playwright, TypeScript and Cucumber (BDD).',
+	},
+	{
+		when: '2022 – 2026',
+		role: 'QA Automation Engineer (SDET)',
+		where: 'Cognizant, Pune',
+		what: 'Moved a legacy Selenium suite to Playwright, and built test frameworks for payment and insurance platforms.',
+	},
+	{
+		when: '2018 – 2022',
+		role: 'Customer service associate',
+		where: 'Pune',
+	},
+	{
+		when: '2015 – 2018',
+		role: 'Hospitality supervisor',
+		where: 'Nagpur',
+	},
+];
+
+const learning = [
+	{ name: 'AWS Certified Solutions Architect – Associate', when: '2026' },
+	{ name: 'Scaler Full Stack Development program', when: 'In progress' },
+	{ name: 'Scaler assessments: Data Structures and Algorithms, Databases and SQL, Java', when: '2023 – 2025' },
+	{ name: 'Bachelor of Business Administration, Rashtrasant Tukadoji Maharaj Nagpur University', when: '2016' },
+];
 ---
 
-<BaseLayout title="About">
+<BaseLayout title="About" description="Piyush Sinha is an SDET in Pune, India, who moved into test automation from customer service and hospitality.">
 	<Fragment slot="hero">
-		<p class="eyebrow">{owner.role}</p>
 		<h1>About</h1>
-		<ul class="about-links">
-			<li><a class="button button-primary" href={owner.resume} download>Download résumé</a></li>
-			<li><ExternalLink class="button" href={owner.links.github}>GitHub</ExternalLink></li>
-			<li><ExternalLink class="button" href={owner.links.linkedin}>LinkedIn</ExternalLink></li>
-		</ul>
+		<p class="lede">
+			I'm an SDET in {owner.location}. I build test automation with Playwright and TypeScript, and I'm growing into
+			backend development with Java and Spring Boot.
+		</p>
 	</Fragment>
-	<div class="prose" data-testid="bio">
-		<p>
-			I'm a Software Development Engineer in Test (SDET) with 4.5+ years building Playwright + TypeScript automation
-			frameworks.
-		</p>
-		<p>
-			At Aumni Techworks, I automate web-app and API testing with Playwright, TypeScript and the Playwright-Cucumber
-			(BDD) framework. Before that, at Cognizant, I designed and scaled automation frameworks across legacy migration,
-			payment and insurance platforms.
-		</p>
-		<p>
-			Alongside test automation, I'm building backend skills with Java and Spring Boot through low-level and system
-			design practice: a JWT-based auth service, a Stripe-integrated payment service and a Splitwise-style expense
-			splitter.
-		</p>
-		<p>
-			I came into tech from non-technical roles in customer service and hospitality. I'm completing Scaler's Full
-			Stack Development program, and I hold an AWS Solutions Architect Associate certification.
-		</p>
+
+	<div class="grid gap-12 lg:grid-cols-[minmax(0,1fr)_minmax(0,22rem)] lg:gap-16">
+		<div class="prose" data-testid="bio">
+			<p>
+				I'm a Software Development Engineer in Test with 4.5+ years of building Playwright and TypeScript automation
+				frameworks for web apps and APIs.
+			</p>
+			<p>
+				At Aumni Techworks, I automate web-app and API testing with Playwright, TypeScript and the Playwright-Cucumber
+				(BDD) framework. Before that, at Cognizant, I moved a legacy Selenium suite to Playwright, cutting a full
+				regression run from four hours to one and a half, and built frameworks for payment and insurance platforms.
+			</p>
+			<p>
+				I care about tests people can trust: fast enough to run on every change, stable enough that a red run means a
+				real bug, and clear enough that anyone can see what broke. This site is tested the same way, and its <a
+					href="/quality">results are public</a
+				>.
+			</p>
+			<p>
+				Alongside test automation, I'm building backend skills with Java and Spring Boot: an auth service, a
+				Stripe-integrated payment service, a product catalogue with Redis caching, and low-level designs such as an
+				expense splitter.
+			</p>
+			<p>
+				I came into tech from customer service and hospitality. I'm completing Scaler's Full Stack Development program,
+				and I hold the AWS Solutions Architect Associate certification.
+			</p>
+		</div>
+
+		<aside class="self-start lg:sticky lg:top-24">
+			<div class="rounded-2xl border border-rule bg-surface p-6">
+				<dl class="grid gap-4">
+					<div>
+						<dt class="text-sm font-semibold text-ink-2">Now</dt>
+						<dd class="font-semibold">{owner.role}</dd>
+					</div>
+					<div>
+						<dt class="text-sm font-semibold text-ink-2">Experience</dt>
+						<dd class="font-semibold">4.5+ years in test automation</dd>
+					</div>
+					<div>
+						<dt class="text-sm font-semibold text-ink-2">Based in</dt>
+						<dd class="font-semibold">{owner.location}</dd>
+					</div>
+				</dl>
+				<ul class="mt-6 grid gap-3">
+					<li><a class="btn btn-primary w-full" href={owner.resume} download>Download résumé</a></li>
+					<li><ExternalLink class="btn btn-secondary w-full" href={owner.links.linkedin}>LinkedIn</ExternalLink></li>
+					<li><ExternalLink class="btn btn-secondary w-full" href={owner.links.github}>GitHub</ExternalLink></li>
+				</ul>
+			</div>
+		</aside>
 	</div>
+
+	<section class="mt-20" aria-labelledby="career-heading">
+		<h2 id="career-heading" class="section-heading">Career path</h2>
+		<ol class="timeline mt-8">
+			{
+				career.map(({ when, role, where, what }) => (
+					<li class="step">
+						<p class="text-sm font-semibold text-ink-2 tabular-nums">{when}</p>
+						<h3 class="mt-1 font-wide text-lg font-bold">{role}</h3>
+						<p class="font-medium">{where}</p>
+						{what && <p class="mt-2 text-ink-2">{what}</p>}
+					</li>
+				))
+			}
+		</ol>
+	</section>
+
+	<section class="mt-20" aria-labelledby="learning-heading">
+		<h2 id="learning-heading" class="section-heading">Certifications and education</h2>
+		<ul class="mt-6 grid border-t border-rule">
+			{
+				learning.map(({ name, when }) => (
+					<li class="grid gap-1 border-b border-rule py-4 sm:grid-cols-[1fr_auto] sm:gap-6">
+						<span class="font-semibold">{name}</span>
+						<span class="text-ink-2 tabular-nums">{when}</span>
+					</li>
+				))
+			}
+		</ul>
+	</section>
 </BaseLayout>
+
+<style>
+	/* A vertical line on phones, a horizontal one on wide screens: each step is one role, newest first. */
+	.timeline {
+		display: grid;
+		gap: 2rem;
+		padding-left: 1.5rem;
+		border-left: 2px solid var(--rule);
+	}
+	.step {
+		position: relative;
+	}
+	.step::before {
+		content: '';
+		position: absolute;
+		top: 0.3rem;
+		left: calc(-1.5rem - 7px);
+		width: 12px;
+		height: 12px;
+		border: 2px solid var(--accent);
+		border-radius: 50%;
+		background: var(--paper);
+	}
+	.step:first-child::before {
+		background: var(--accent);
+	}
+	@media (min-width: 64rem) {
+		.timeline {
+			grid-template-columns: repeat(4, 1fr);
+			gap: 1.5rem;
+			padding-top: 1.75rem;
+			padding-left: 0;
+			border-top: 2px solid var(--rule);
+			border-left: 0;
+		}
+		.step::before {
+			top: calc(-1.75rem - 7px);
+			left: 0;
+		}
+	}
+</style>

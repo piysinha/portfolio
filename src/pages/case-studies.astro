@@ -7,19 +7,19 @@ import { newestFirst } from '../lib/dates';
 const caseStudies = newestFirst(await getCollection('caseStudies'));
 ---
 
-<BaseLayout title="Case studies">
+<BaseLayout title="Case studies" description="Test automation problems Piyush Sinha has solved, with the results.">
 	<Fragment slot="hero">
-		<p class="eyebrow">Work</p>
 		<h1>Case studies</h1>
-		<p class="lede">Problems I've worked on, with employer and client details kept anonymous.</p>
+		<p class="lede">Test automation problems I've solved at work, and what changed as a result. Employer and client details are kept anonymous.</p>
 	</Fragment>
-	<div class="entry-list">
+	<div class="grid gap-4 md:grid-cols-2 lg:grid-cols-3" data-testid="entry-list">
 		{
 			caseStudies.map((caseStudy) => (
 				<EntryCard
 					title={caseStudy.data.title}
 					href={`/case-studies/${caseStudy.id}`}
 					summary={caseStudy.data.problem}
+					highlight={caseStudy.data.highlight}
 					date={caseStudy.data.date}
 					tags={caseStudy.data.tags}
 				/>

@@ -16,19 +16,42 @@ const { caseStudy } = Astro.props;
 const { Content } = await render(caseStudy);
 ---
 
-<BaseLayout title={caseStudy.data.title}>
+<BaseLayout title={caseStudy.data.title} description={caseStudy.data.problem}>
 	<Fragment slot="hero">
-		<p class="eyebrow">Case study</p>
-		<h1>{caseStudy.data.title}</h1>
+		<p class="mb-5"><a class="link" href="/case-studies">All case studies</a></p>
+		<h1 class="title-long">{caseStudy.data.title}</h1>
 		<EntryMeta date={caseStudy.data.date} tags={caseStudy.data.tags} />
 	</Fragment>
-	<article class="prose">
-		<h2>Problem</h2>
-		<p>{caseStudy.data.problem}</p>
-		<h2>Approach</h2>
-		<p>{caseStudy.data.approach}</p>
-		<h2>Outcome</h2>
-		<p>{caseStudy.data.outcome}</p>
-		<Content />
-	</article>
+	<div class="grid gap-12 lg:grid-cols-[minmax(0,1fr)_minmax(0,22rem)] lg:gap-16">
+		<article class="prose">
+			<h2>Problem</h2>
+			<p>{caseStudy.data.problem}</p>
+			<h2>Approach</h2>
+			<p>{caseStudy.data.approach}</p>
+			<h2>Outcome</h2>
+			<p>{caseStudy.data.outcome}</p>
+			<Content />
+		</article>
+		<aside class="self-start lg:sticky lg:top-24">
+			<div class="rounded-2xl border border-rule bg-surface p-6">
+				{
+					caseStudy.data.highlight && (
+						<div class="mb-5 border-b border-rule pb-5">
+							<p class="text-sm font-semibold text-ink-2">Headline result</p>
+							<p class="mt-1 font-wide text-xl leading-tight font-extrabold">{caseStudy.data.highlight}</p>
+						</div>
+					)
+				}
+				<h2 class="font-wide text-lg font-bold">About this case study</h2>
+				<p class="mt-2 text-[0.9375rem] text-ink-2">
+					Work from my time as an SDET. The employer, client and any confidential details are left out; the numbers are
+					the ones I can share.
+				</p>
+				<div class="mt-5 grid gap-3">
+					<a class="btn btn-primary" href="/contact">Ask me about it</a>
+					<a class="btn btn-secondary" href="/case-studies">More case studies</a>
+				</div>
+			</div>
+		</aside>
+	</div>
 </BaseLayout>

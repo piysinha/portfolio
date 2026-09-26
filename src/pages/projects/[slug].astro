@@ -17,18 +17,20 @@ const { project } = Astro.props;
 const { Content } = await render(project);
 ---
 
-<BaseLayout title={project.data.title}>
+<BaseLayout title={project.data.title} description={project.data.summary}>
 	<Fragment slot="hero">
-		<p class="eyebrow">Project</p>
-		<h1>{project.data.title}</h1>
+		<p class="mb-5"><a class="link" href="/projects">All projects</a></p>
+		<h1 class="title-long">{project.data.title}</h1>
 		<p class="lede">{project.data.summary}</p>
 		<EntryMeta date={project.data.date} tags={project.data.tags} />
-		<ul class="entry-links">
-			<li><ExternalLink class="button button-primary" href={project.data.repo}>Source code</ExternalLink></li>
+		<ul class="mt-8 grid gap-3 sm:flex sm:flex-wrap">
+			<li><ExternalLink class="btn btn-primary w-full" href={project.data.repo}>Source code</ExternalLink></li>
 			{
 				project.data.live && (
 					<li>
-						<ExternalLink class="button" href={project.data.live}>Live site</ExternalLink>
+						<ExternalLink class="btn btn-secondary w-full" href={project.data.live}>
+							Live site
+						</ExternalLink>
 					</li>
 				)
 			}
