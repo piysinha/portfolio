@@ -13,6 +13,17 @@ export const owner = {
 };
 
 /**
+ * The image in link previews on X, LinkedIn and other sites. Rendered from `owner` and real replay
+ * test titles by `npm run render:preview-image`; re-render it when those change.
+ */
+export const previewImage = {
+	path: '/og-image.png',
+	width: 1200,
+	height: 630,
+	alt: `${owner.name}, ${owner.role}: Playwright and TypeScript test automation, beside a terminal of this site's own tests.`,
+};
+
+/**
  * Turnstile's public site key for the contact form's widget (hostname piyush-sinha-portfolio.pages.dev).
  * It's baked into the pages at build time; the matching secret is a Production-only Cloudflare secret.
  */

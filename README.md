@@ -45,6 +45,7 @@ npm run test:visual -- --update-snapshots   # accept intended visual changes
 - **Projects**: `src/content/projects/*.md`, with a title, summary, area (test automation, backend or full stack), tags, repo link, optional live link, date and `featured` flag.
 - **Case studies**: `src/content/case-studies/*.md`, with a problem, approach, outcome and optional headline result. There is deliberately no employer or client field, so employer work stays anonymous.
 - **Résumé**: `public/piyush-sinha-resume.pdf`.
+- **Link preview image**: `public/og-image.png`, shown when a link to the site is shared on X, LinkedIn and elsewhere. `npm run render:preview-image` renders it from the name, role and test titles in `src/lib/`, so re-render it when those change.
 
 Terms used across the code and docs (Visitor, Enquiry, Gate run, Smoke run) are defined in [`CONTEXT.md`](CONTEXT.md).
 
