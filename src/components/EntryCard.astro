@@ -16,13 +16,18 @@ interface Props {
 	level?: 2 | 3;
 	/** A card for grids, or a row for a single-column list. */
 	layout?: 'card' | 'row';
+	/** Position in its list, so cards reveal one after another. */
+	index?: number;
 }
 
-const { title, href, summary, highlight, date, tags, kind, level = 2, layout = 'card' } = Astro.props;
+const { title, href, summary, highlight, date, tags, kind, level = 2, layout = 'card', index = 0 } = Astro.props;
 const Heading = `h${level}` as const;
 ---
 
-<article class:list={['entry-card', { 'is-row': layout === 'row' }]}>
+<article class:list={['entry-card', { 'is-row': layout === 'row' }]} data-reveal data-spotlight style={`--d:${index % 3}`}>
+	<span class="entry-arrow" aria-hidden="true">
+		<svg viewBox="0 0 24 24" width="16" height="16"><path d="M7 17 17 7M9 7h8v8"></path></svg>
+	</span>
 	{kind && <p class="entry-kind" data-testid="kind">{kind}</p>}
 	<Heading><a href={href}>{title}</a></Heading>
 	<p data-testid="summary">{summary}</p>

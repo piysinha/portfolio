@@ -1,0 +1,304 @@
+---
+// A terminal-style replay of this site's own tests. The lines are real test titles, checked against
+// e2e/ by test-run-replay.test.ts. The last lines read the latest real results from the reports site,
+// and until they load (or if they can't) they state only what the release gate guarantees.
+import { guaranteedCheck } from '../lib/release-check';
+import { replayLines } from '../lib/test-run-replay';
+---
+
+<figure class="term is-playing" aria-label="Replay of this site's own tests" data-replay>
+	<div class="term-bar">
+		<span class="term-dots" aria-hidden="true"><i></i><i></i><i></i></span>
+		<span class="term-title" aria-hidden="true">portfolio: npx playwright test</span>
+		<button class="term-replay" type="button" aria-label="Replay the test run">
+			<svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true">
+				<path d="M4 12a8 8 0 1 0 2.5-5.8M4 4v4.5h4.5"></path>
+			</svg>
+		</button>
+	</div>
+	<div class="term-body">
+		<p class="term-cmd"><span class="term-prompt">$</span> <span class="term-typed">npx playwright test</span></p>
+		<p class="term-note" style="--l:0">Running the suite in Chromium, Firefox, WebKit and a phone</p>
+		<ol class="term-lines">
+			{
+				replayLines.map(({ project, title }, i) => (
+					<li style={`--l:${i + 1}`}>
+						<span class="term-ok" aria-hidden="true">✓</span>
+						<span>
+							<span class="term-project">[{project}]</span> {title}
+						</span>
+					</li>
+				))
+			}
+		</ol>
+		<div class="term-summary" style={`--l:${replayLines.length + 1}`} data-state={guaranteedCheck.state} data-testid="replay-summary">
+			<p class="term-result">
+				<span class="sr-only" data-result>{guaranteedCheck.result}</span><span aria-hidden="true" data-result-visual
+					>{guaranteedCheck.result}</span
+				>
+			</p>
+			<p class="term-release" data-release>{guaranteedCheck.release}</p>
+		</div>
+		<p class="term-cmd term-next" style={`--l:${replayLines.length + 2}`} aria-hidden="true">
+			<span class="term-prompt">$</span> <span class="term-cursor"></span>
+		</p>
+	</div>
+</figure>
+
+<script>
+	import { dashboardView } from '../lib/quality-dashboard';
+	import { releaseCheck } from '../lib/release-check';
+	import { reports } from '../lib/site';
+
+	// The first replay plays from CSS on load. After that it loops, but only while the terminal is on
+	// screen and the tab is visible, and never for Visitors who prefer reduced motion. The Replay button
+	// restarts it at any time.
+	const CYCLE_MS = 14000;
+	const term = document.querySelector<HTMLElement>('[data-replay]');
+	const summary = term?.querySelector<HTMLElement>('.term-summary');
+	const visual = term?.querySelector<HTMLElement>('[data-result-visual]');
+	const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)');
+	let onScreen = false;
+	let timer: ReturnType<typeof setInterval> | undefined;
+
+	function replay() {
+		term?.classList.remove('is-playing');
+		void term?.offsetWidth; // restart the CSS animations
+		term?.classList.add('is-playing');
+	}
+
+	function update() {
+		const shouldLoop = onScreen && !document.hidden && !reducedMotion.matches;
+		if (shouldLoop && !timer) timer = setInterval(replay, CYCLE_MS);
+		if (!shouldLoop && timer) {
+			clearInterval(timer);
+			timer = undefined;
+		}
+	}
+
+	/** Counts the leading number of the result line up from zero, as the line appears. */
+	function countUp() {
+		const text = summary?.querySelector('[data-result]')?.textContent ?? '';
+		const match = /^(\d+)(.*)$/s.exec(text);
+		if (!visual) return;
+		if (!match || reducedMotion.matches) {
+			visual.textContent = text;
+			return;
+		}
+		const [, digits, rest] = match;
+		const target = Number(digits);
+		const start = performance.now();
+		const tick = (now: number) => {
+			const t = Math.min((now - start) / 900, 1);
+			visual.textContent = `${Math.round(target * (1 - Math.pow(1 - t, 3)))}${rest}`;
+			if (t < 1) requestAnimationFrame(tick);
+		};
+		requestAnimationFrame(tick);
+	}
+
+	async function loadResults() {
+		if (!summary) return;
+		try {
+			const response = await fetch(reports.summaryUrl, { cache: 'no-store' });
+			if (!response.ok) return;
+			const check = releaseCheck(dashboardView(await response.json(), new Date()));
+			summary.dataset.state = check.state;
+			summary.querySelector('[data-result]')!.textContent = check.result;
+			summary.querySelector('[data-release]')!.textContent = check.release;
+			if (visual) visual.textContent = check.result;
+		} catch {
+			// The reports site is unreachable: the lines keep stating what the release gate guarantees.
+		}
+	}
+
+	if (term) {
+		new IntersectionObserver(([entry]) => {
+			onScreen = entry.isIntersecting;
+			update();
+		}).observe(term);
+		document.addEventListener('visibilitychange', update);
+		reducedMotion.addEventListener('change', update);
+		summary?.addEventListener('animationstart', countUp);
+		term.querySelector('.term-replay')?.addEventListener('click', () => {
+			replay();
+			if (timer) {
+				clearInterval(timer);
+				timer = undefined;
+				update();
+			}
+		});
+		loadResults();
+	}
+</script>
+
+<style>
+	.term {
+		--term-bg: #0b1030;
+		--term-fg: #e6e9f7;
+		--term-muted: #939ac2;
+		--term-line: rgb(255 255 255 / 0.09);
+		--term-accent: #a8b3ff;
+		--term-pass: #62d38e;
+		--term-fail: #ff8a80;
+		overflow: hidden;
+		border-radius: 1.25rem;
+		background: var(--term-bg);
+		color: var(--term-fg);
+		box-shadow: 0 30px 60px -30px rgb(18 23 53 / 0.55);
+		font-family: var(--font-mono);
+		font-size: 0.8125rem;
+		line-height: 1.55;
+	}
+	:global([data-theme='dark']) .term {
+		--term-bg: #060919;
+		box-shadow: 0 0 0 1px var(--rule);
+	}
+	@media (max-width: 39.999rem) {
+		.term {
+			font-size: 0.75rem;
+		}
+	}
+	.term-bar {
+		display: flex;
+		align-items: center;
+		gap: 0.75rem;
+		padding: 0.55rem 0.6rem 0.55rem 1rem;
+		border-bottom: 1px solid var(--term-line);
+	}
+	.term-dots {
+		display: flex;
+		gap: 0.35rem;
+	}
+	.term-dots i {
+		width: 0.6rem;
+		height: 0.6rem;
+		border-radius: 50%;
+		background: rgb(255 255 255 / 0.18);
+	}
+	.term-title {
+		flex: 1;
+		overflow: hidden;
+		color: var(--term-muted);
+		font-size: 0.75rem;
+		text-align: center;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+	}
+	.term-replay {
+		display: grid;
+		place-items: center;
+		width: 2rem;
+		height: 2rem;
+		border-radius: 0.5rem;
+		color: var(--term-muted);
+		cursor: pointer;
+		transition:
+			color 0.15s ease,
+			background-color 0.15s ease;
+	}
+	.term-replay:hover {
+		background: rgb(255 255 255 / 0.08);
+		color: var(--term-fg);
+	}
+	.term-replay svg {
+		fill: none;
+		stroke: currentColor;
+		stroke-width: 2;
+		stroke-linecap: round;
+		stroke-linejoin: round;
+	}
+	.term-replay:active svg {
+		rotate: -40deg;
+	}
+	.term-body {
+		display: grid;
+		gap: 0.45rem;
+		padding: 1rem 1.1rem 1.25rem;
+	}
+	@media (min-width: 40rem) {
+		.term-body {
+			padding: 1.25rem 1.4rem 1.5rem;
+		}
+	}
+	.term-prompt {
+		color: var(--term-accent);
+	}
+	.term-note,
+	.term-project {
+		color: var(--term-muted);
+	}
+	.term-lines {
+		display: grid;
+		gap: 0.45rem;
+	}
+	/* Lines wrap with a hanging indent, so long test titles stay readable on a phone. */
+	.term-lines li {
+		display: grid;
+		grid-template-columns: 1.25rem 1fr;
+	}
+	.term-ok {
+		color: var(--term-pass);
+	}
+	.term-summary {
+		margin-top: 0.35rem;
+		padding-top: 0.75rem;
+		border-top: 1px dashed var(--term-line);
+	}
+	.term-result {
+		color: var(--term-pass);
+		font-weight: 700;
+	}
+	.term-summary[data-state='failed'] .term-result {
+		color: var(--term-fail);
+	}
+	.term-summary[data-state='unknown'] .term-result {
+		color: var(--term-fg);
+	}
+	.term-release {
+		color: var(--term-muted);
+	}
+	.term-cursor {
+		display: inline-block;
+		width: 0.55em;
+		height: 1.1em;
+		vertical-align: text-bottom;
+		background: var(--term-accent);
+		animation: blink 1.1s steps(1) infinite;
+	}
+	.term-typed {
+		display: inline-block;
+		box-sizing: content-box;
+		width: 19ch;
+		overflow: hidden;
+		vertical-align: bottom;
+		white-space: nowrap;
+	}
+
+	/* The replay: type the command, then each line lands in turn, then the results. */
+	.is-playing .term-typed {
+		animation: type 0.9s steps(19) 0.35s both;
+	}
+	.is-playing .term-note,
+	.is-playing .term-lines li,
+	.is-playing .term-summary,
+	.is-playing .term-next {
+		animation: line-in 0.35s ease-out both;
+		animation-delay: calc(1.45s + var(--l) * 0.32s);
+	}
+	@keyframes type {
+		from {
+			width: 0;
+		}
+	}
+	@keyframes line-in {
+		from {
+			opacity: 0;
+			translate: -6px 0;
+		}
+	}
+	@keyframes blink {
+		50% {
+			opacity: 0;
+		}
+	}
+</style>

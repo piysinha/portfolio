@@ -40,7 +40,8 @@ for (const collection of collections) {
 
 	for (const colorScheme of ['light', 'dark'] as const) {
 		test(`every ${collection.name} entry passes accessibility and fits the viewport in ${colorScheme} theme`, async ({ page }) => {
-			await page.emulateMedia({ colorScheme });
+			// Axe checks the settled design: mid-animation colours are not what Visitors read.
+			await page.emulateMedia({ colorScheme, reducedMotion: 'reduce' });
 
 			for (const path of await entryPaths(page, collection.path)) {
 				await page.goto(path);

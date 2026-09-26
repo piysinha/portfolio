@@ -8,7 +8,7 @@ for (const colorScheme of ['light', 'dark'] as const) {
 		// Known results, so the live line on Home reads the same on every run.
 		await serveSummary(page, summaryWith([run('gate', 2)], [run('smoke', 1)]));
 		await page.goto('/');
-		await expect(page.getByText('passed all 217 of its tests')).toBeVisible();
+		await expect(page.getByTestId('replay-summary')).toContainText('217 passed');
 
 		await expect(page).toHaveScreenshot(`home-${colorScheme}.png`, { fullPage: true });
 	});

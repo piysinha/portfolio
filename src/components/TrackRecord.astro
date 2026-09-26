@@ -1,123 +1,77 @@
 ---
-// Home's track record: headline career results, then one live line read from this site's own Test runs.
-// The live line starts as what the release gate guarantees (no counts) and updates once results load.
-import { guaranteedCheck } from '../lib/release-check';
-
-const claims = [
-	{
-		claim: '4.5+ years building Playwright and TypeScript automation',
-		detail: 'For web apps and APIs, at Cognizant and now at Aumni Techworks.',
-	},
-	{
-		claim: 'Regression runs cut from 4 hours to 90 minutes',
-		detail: 'By moving a legacy Selenium suite to Playwright, with parallel workers in CI.',
-	},
-	{
-		claim: 'About 55% fewer flaky failures',
-		detail: 'From auto-waiting locators, reusable login state and fixes found in traces.',
-	},
+// Home's track record: three headline career results. Figures count up once they scroll into view
+// (see the motion script in BaseLayout); screen readers and the settled page get the final figure.
+const results = [
+	{ from: 0, to: 4.5, decimals: 1, before: '', after: '+ years', claim: 'building Playwright and TypeScript automation for web apps and APIs.' },
+	{ from: 240, to: 90, decimals: 0, before: '', after: ' min', claim: 'for a full regression run, down from 4 hours after a Selenium-to-Playwright migration.' },
+	{ from: 0, to: 55, decimals: 0, before: '~', after: '% fewer', claim: 'flaky failures, from auto-waiting locators, reusable login state and fixes found in traces.' },
 ];
 ---
 
 <section class="track" aria-labelledby="track-heading">
-	<h2 id="track-heading" class="track-heading">Track record</h2>
-	<ul class="checks">
+	<h2 id="track-heading" class="sr-only">Track record</h2>
+	<ul class="track-list">
 		{
-			claims.map(({ claim, detail }, i) => (
-				<li class="check" style={`--i:${i}`}>
-					<span class="mark mark-claim" aria-hidden="true">
+			results.map(({ from, to, decimals, before, after, claim }, i) => (
+				<li class="track-item" data-reveal style={`--d:${i}`}>
+					<span class="mark" aria-hidden="true">
 						<svg viewBox="0 0 24 24" width="16" height="16">
 							<path class="tick" d="M5 12.5l4.5 4.5L19 7.5" />
 						</svg>
 					</span>
-					<div>
-						<p class="claim">{claim}</p>
-						<p class="detail">{detail}</p>
-					</div>
+					<p class="figure">
+						<span class="sr-only">{`${before}${to.toFixed(decimals)}${after}`}</span>
+						{/* On one line: whitespace here would show up between the figure and its unit. */}
+						<span aria-hidden="true">{before}<span data-count-to={to} data-count-from={from} data-decimals={decimals}>{to.toFixed(decimals)}</span>{after}</span>
+					</p>
+					<p class="claim">{claim}</p>
 				</li>
 			))
 		}
-		<li class="check live" style={`--i:${claims.length}`} data-release-check data-state={guaranteedCheck.state}>
-			<span class="mark mark-live" aria-hidden="true">
-				<svg viewBox="0 0 24 24" width="16" height="16">
-					<path class="tick" d="M5 12.5l4.5 4.5L19 7.5" />
-					<path class="cross" d="M7 7l10 10M17 7 7 17" />
-					<circle class="dot" cx="12" cy="12" r="3.5" />
-				</svg>
-			</span>
-			<div>
-				<p class="live-label">Live from this site's tests</p>
-				<p class="claim" data-claim>{guaranteedCheck.claim}</p>
-				<p class="detail" data-detail>{guaranteedCheck.detail}</p>
-				<p class="mt-3"><a class="link" href="/quality">See the test results</a></p>
-			</div>
-		</li>
 	</ul>
 </section>
 
-<script>
-	import { dashboardView } from '../lib/quality-dashboard';
-	import { releaseCheck } from '../lib/release-check';
-	import { reports } from '../lib/site';
-
-	const line = document.querySelector<HTMLElement>('[data-release-check]');
-
-	async function load() {
-		if (!line) return;
-		try {
-			const response = await fetch(reports.summaryUrl, { cache: 'no-store' });
-			if (!response.ok) return;
-			const check = releaseCheck(dashboardView(await response.json(), new Date()));
-			line.dataset.state = check.state;
-			line.querySelector('[data-claim]')!.textContent = check.claim;
-			line.querySelector('[data-detail]')!.textContent = check.detail;
-		} catch {
-			// The reports site is unreachable: the line keeps stating what the release gate guarantees.
-		}
-	}
-
-	load();
-</script>
-
 <style>
-	.track {
-		padding: 1.5rem 1.25rem 1.4rem;
+	.track-list {
+		display: grid;
 		border: 1px solid var(--rule);
 		border-radius: 1.25rem;
 		background: var(--surface);
 	}
-	@media (min-width: 40rem) {
-		.track {
-			padding: 1.75rem 1.75rem 1.6rem;
+	@media (min-width: 48rem) {
+		.track-list {
+			grid-template-columns: repeat(3, 1fr);
 		}
 	}
-	.track-heading {
-		color: var(--ink-2);
-		font-size: 0.9375rem;
-		font-weight: 650;
-	}
-	.checks {
-		display: grid;
-		margin-top: 0.5rem;
-	}
-	.check {
+	.track-item {
 		display: grid;
 		grid-template-columns: 1.75rem 1fr;
-		gap: 0.85rem;
-		padding-block: 1rem;
-		border-bottom: 1px solid var(--rule);
+		column-gap: 0.85rem;
+		align-content: start;
+		padding: 1.25rem 1.25rem 1.35rem;
 	}
-	.check:last-child {
-		padding-bottom: 0.25rem;
-		border-bottom: 0;
+	.track-item + .track-item {
+		border-top: 1px solid var(--rule);
+	}
+	@media (min-width: 48rem) {
+		.track-item {
+			padding: 1.6rem 1.6rem 1.75rem;
+		}
+		.track-item + .track-item {
+			border-top: 0;
+			border-left: 1px solid var(--rule);
+		}
 	}
 	.mark {
 		display: grid;
+		grid-row: span 2;
 		place-items: center;
 		width: 1.75rem;
 		height: 1.75rem;
-		margin-top: 0.05rem;
+		margin-top: 0.3rem;
 		border-radius: 50%;
+		background: var(--accent-soft);
+		color: var(--accent);
 	}
 	.mark svg {
 		fill: none;
@@ -126,70 +80,29 @@ const claims = [
 		stroke-linecap: round;
 		stroke-linejoin: round;
 	}
-	.mark-claim {
-		background: var(--accent-soft);
-		color: var(--accent);
-	}
-	/* Each tick is drawn in turn, once, as the page loads. */
-	.tick {
-		stroke-dasharray: 22;
-		stroke-dashoffset: 22;
-		animation: draw 0.4s ease-out forwards;
-		animation-delay: calc(0.45s + var(--i) * 0.2s);
+	.figure {
+		font-size: clamp(1.75rem, 5vw, 2.25rem);
+		font-stretch: 118%;
+		font-weight: 800;
+		font-variant-numeric: tabular-nums;
+		letter-spacing: -0.02em;
+		line-height: 1.1;
 	}
 	.claim {
-		color: var(--ink);
-		font-size: 1.0625rem;
-		font-weight: 650;
-		line-height: 1.35;
-	}
-	.detail {
-		margin-top: 0.2rem;
+		margin-top: 0.35rem;
 		color: var(--ink-2);
-		font-size: 0.9375rem;
+		font-size: 0.975rem;
 		line-height: 1.5;
 	}
-	.live-label {
-		margin-bottom: 0.2rem;
-		color: var(--ink-2);
-		font-size: 0.8125rem;
-		font-weight: 600;
-	}
-
-	/* The live line: green tick, red cross, or a neutral dot while no result is known. */
-	.mark-live {
-		border: 1.5px solid var(--rule);
-		color: var(--ink-2);
-	}
-	.mark-live .tick,
-	.mark-live .cross,
-	.mark-live .dot {
-		display: none;
-	}
-	.live[data-state='unknown'] .dot {
-		display: inline;
-		fill: currentColor;
-		stroke: none;
-	}
-	.live[data-state='passed'] .mark-live {
-		border-color: transparent;
-		background: var(--pass);
-		color: var(--surface);
-	}
-	.live[data-state='passed'] .tick {
-		display: inline;
-	}
-	.live[data-state='failed'] .mark-live {
-		border-color: transparent;
-		background: var(--fail);
-		color: var(--surface);
-	}
-	.live[data-state='failed'] .cross {
-		display: inline;
-	}
-
-	@keyframes draw {
-		to {
+	/* Each tick draws once its result has scrolled into view. */
+	@media (prefers-reduced-motion: no-preference) {
+		:global(.js) .tick {
+			stroke-dasharray: 22;
+			stroke-dashoffset: 22;
+			transition: stroke-dashoffset 0.5s ease-out;
+			transition-delay: calc(0.25s + var(--d) * 0.12s);
+		}
+		:global(.js) .is-in .tick {
 			stroke-dashoffset: 0;
 		}
 	}

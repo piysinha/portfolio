@@ -43,30 +43,64 @@ test('Home features work that opens its own page', { tag: '@smoke' }, async ({ p
 	}
 });
 
-test.describe("Home's live line from the site's own tests", () => {
-	const liveLine = (page: Page) =>
-		page.getByRole('region', { name: 'Track record' }).getByRole('listitem').last();
+test.describe("Home's terminal replay", () => {
+	const summary = (page: Page) => page.getByRole('figure', { name: "Replay of this site's own tests" }).getByTestId('replay-summary');
 
-	test('claims the latest release count when every check passes', async ({ page }) => {
+	test('ends with the latest release result when every check passes', async ({ page }) => {
 		await serveSummary(page, summaryWith([run('gate', 2)], [run('smoke', 1)]));
 		await page.goto('/');
 
-		await expect(liveLine(page)).toContainText("This site's latest release passed all 217 of its tests");
-		await expect(liveLine(page)).toContainText('In Chromium, Firefox, WebKit and a phone, 2 hours ago.');
+		await expect(summary(page)).toContainText('217 passed (2m 23s)');
+		await expect(summary(page)).toContainText('Promoted to production. Tested 2 hours ago.');
 	});
 
 	test('says so when the live site fails its latest check', async ({ page }) => {
 		await serveSummary(page, summaryWith([run('gate', 2)], [run('smoke', 1, 'failed')]));
 		await page.goto('/');
 
-		await expect(liveLine(page)).toContainText('The live site failed its latest check');
+		await expect(summary(page)).toContainText('2 failed on the live site');
 	});
 
 	test('states only what the release gate guarantees when results are unreachable', async ({ page }) => {
 		await serveSummary(page, 'unreachable');
 		await page.goto('/');
 
-		await expect(liveLine(page)).toContainText('Every release of this site must pass its full test suite');
-		await expect(liveLine(page).getByRole('link', { name: 'See the test results' })).toHaveAttribute('href', '/quality');
+		await expect(summary(page)).toContainText('Every test must pass');
+		await expect(summary(page)).not.toContainText(/\d/);
+	});
+
+	test('the Visitor can replay it, and the result stays put', async ({ page }) => {
+		await serveSummary(page, summaryWith([run('gate', 2)], [run('smoke', 1)]));
+		await page.goto('/');
+		await expect(summary(page)).toContainText('217 passed');
+
+		await page.getByRole('button', { name: 'Replay the test run' }).click();
+
+		await expect(summary(page)).toContainText('217 passed (2m 23s)');
+	});
+});
+
+test('everything that slides in on scroll ends up fully visible', async ({ page }) => {
+	await page.goto('/');
+	const revealed = page.locator('[data-reveal]');
+	expect(await revealed.count(), 'Home has elements that reveal on scroll').toBeGreaterThan(0);
+
+	for (const element of await revealed.all()) await element.scrollIntoViewIfNeeded();
+
+	await expect
+		.poll(() => revealed.evaluateAll((elements) => elements.filter((element) => getComputedStyle(element).opacity !== '1').length))
+		.toBe(0);
+});
+
+test.describe('without JavaScript', () => {
+	test.use({ javaScriptEnabled: false });
+
+	test('nothing waits to be revealed', async ({ page }) => {
+		await page.goto('/');
+
+		const hidden = await page
+			.locator('[data-reveal]')
+			.evaluateAll((elements) => elements.filter((element) => getComputedStyle(element).opacity !== '1').length);
+		expect(hidden).toBe(0);
 	});
 });

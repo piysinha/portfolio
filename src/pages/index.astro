@@ -2,6 +2,7 @@
 import { getCollection } from 'astro:content';
 import EntryCard from '../components/EntryCard.astro';
 import ExternalLink from '../components/ExternalLink.astro';
+import TestRunReplay from '../components/TestRunReplay.astro';
 import TrackRecord from '../components/TrackRecord.astro';
 import BaseLayout from '../layouts/BaseLayout.astro';
 import { featuredWork } from '../lib/featured';
@@ -26,29 +27,41 @@ const toolbox = [
 ---
 
 <BaseLayout>
-	<div slot="hero" class="grid gap-10 lg:grid-cols-[minmax(0,1fr)_minmax(0,27rem)] lg:gap-16 lg:pt-2">
+	<div slot="hero">
+		<div class="grid items-center gap-10 lg:grid-cols-[minmax(0,1fr)_minmax(0,33rem)] lg:gap-14">
 			<div class="hero-main">
-				<h1 class="name font-display"><span>Piyush</span> <span>Sinha</span></h1>
-				<p class="mt-8 font-wide text-xl font-bold text-accent sm:text-2xl">{owner.role}</p>
-				<p class="mt-4 max-w-[34rem] text-xl leading-snug sm:text-2xl" data-testid="intro">
+				<h1 class="name font-display">
+					<span class="line"><span style="--w:0">Piyush</span></span> <span class="line"><span style="--w:1">Sinha</span></span>
+				</h1>
+				<p class="hero-in mt-6 font-wide text-xl font-bold text-accent sm:text-2xl" style="--i:0">{owner.role}</p>
+				<p class="hero-in mt-4 max-w-[34rem] text-xl leading-snug sm:text-2xl" style="--i:1" data-testid="intro">
 					I build Playwright and TypeScript test automation for web apps and APIs, fast and stable enough to gate every
 					release.
 				</p>
-				<p class="mt-4 max-w-[34rem] text-ink-2">
+				<p class="hero-in mt-4 max-w-[34rem] text-ink-2" style="--i:2">
 					Based in {owner.location}. Also growing into backend development with Java and Spring Boot.
 				</p>
-				<div class="mt-8 grid gap-3 sm:flex sm:flex-wrap">
+				<div class="hero-in mt-8 grid gap-3 sm:flex sm:flex-wrap" style="--i:3">
 					<a class="btn btn-primary" href={owner.resume} download>Download résumé</a>
 					<a class="btn btn-secondary" href="/contact">Get in touch</a>
 				</div>
 			</div>
+			<div class="hero-in" style="--i:1">
+				<TestRunReplay />
+				<p class="mt-3 text-center text-[0.9375rem] text-ink-2">
+					Real test names from this site. <a class="link" href="/quality">See the test results</a>
+				</p>
+			</div>
+		</div>
+		<div class="mt-12 lg:mt-16">
 			<TrackRecord />
+		</div>
 	</div>
 
 	{
 		featured.length > 0 && (
 			<section aria-labelledby="featured-heading">
-				<div class="flex flex-wrap items-baseline justify-between gap-x-6 gap-y-1">
+				<div class="flex flex-wrap items-baseline justify-between gap-x-6 gap-y-1" data-reveal>
 					<h2 id="featured-heading" class="section-heading">
 						Featured work
 					</h2>
@@ -58,8 +71,9 @@ const toolbox = [
 					</p>
 				</div>
 				<div class="mt-6 grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-					{featured.map((item) => (
+					{featured.map((item, i) => (
 						<EntryCard
+							index={i}
 							kind={item.kind}
 							level={3}
 							title={item.title}
@@ -76,15 +90,15 @@ const toolbox = [
 	}
 
 	<section class="mt-20" aria-labelledby="toolbox-heading">
-		<h2 id="toolbox-heading" class="section-heading">What I work with</h2>
+		<h2 id="toolbox-heading" class="section-heading" data-reveal>What I work with</h2>
 		<div class="mt-6 grid gap-8 md:grid-cols-3 md:gap-6">
 			{
-				toolbox.map(({ area, tools }) => (
-					<div class="border-t-2 border-ink pt-4">
+				toolbox.map(({ area, tools }, i) => (
+					<div class="border-t-2 border-ink pt-4" data-reveal style={`--d:${i}`}>
 						<h3 class="font-wide text-lg font-bold">{area}</h3>
 						<ul class="mt-3 flex flex-wrap gap-2">
 							{tools.map((tool) => (
-								<li class="rounded-md bg-surface px-2.5 py-1 text-[0.9375rem] ring-1 ring-rule">{tool}</li>
+								<li class="tool">{tool}</li>
 							))}
 						</ul>
 					</div>
@@ -93,7 +107,7 @@ const toolbox = [
 		</div>
 	</section>
 
-	<section class="cta mt-20" aria-labelledby="cta-heading">
+	<section class="cta mt-20" aria-labelledby="cta-heading" data-reveal data-spotlight>
 		<h2 id="cta-heading" class="font-display text-[clamp(2rem,6vw,3.25rem)]">Hiring for test automation?</h2>
 		<p class="mt-4 max-w-xl text-lg">
 			Tell me about the role or the project. Messages come straight to my inbox, and I reply by email.
@@ -106,19 +120,69 @@ const toolbox = [
 </BaseLayout>
 
 <style>
-	/* The name fills its column, one word per line, at every width. */
+	/* The name scales with its column, one word per line, at every width. */
 	.hero-main {
 		container-type: inline-size;
 	}
 	.name {
-		font-size: clamp(3.25rem, 14vw, 8rem);
-		font-size: min(26cqi, 9.5rem);
+		font-size: clamp(2.75rem, 12vw, 6rem);
+		font-size: min(19cqi, 6.5rem);
 		overflow-wrap: normal;
 	}
-	.name span {
+	/* Each word sits in a mask it slides up through on load. The padding keeps the "y" descender visible. */
+	.name .line {
+		display: block;
+		overflow: hidden;
+		padding-bottom: 0.12em;
+		margin-bottom: -0.12em;
+	}
+	.name .line > span {
 		display: block;
 	}
+	@media (prefers-reduced-motion: no-preference) {
+		.name .line > span {
+			animation: word-up 0.9s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+			animation-delay: calc(0.1s + var(--w) * 0.12s);
+		}
+		.hero-in {
+			animation: fade-up 0.7s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+			animation-delay: calc(0.4s + var(--i) * 0.09s);
+		}
+	}
+	@keyframes word-up {
+		from {
+			translate: 0 110%;
+		}
+	}
+	@keyframes fade-up {
+		from {
+			opacity: 0;
+			translate: 0 14px;
+		}
+	}
+	/* A brighter spotlight on the dark band. */
+	.cta::before {
+		background: radial-gradient(28rem circle at var(--mx, 50%) var(--my, 50%), rgb(158 171 255 / 0.3), transparent 70%);
+	}
+	.tool {
+		padding: 0.25rem 0.65rem;
+		border-radius: 0.375rem;
+		background: var(--surface);
+		box-shadow: inset 0 0 0 1px var(--rule);
+		font-size: 0.9375rem;
+		transition:
+			box-shadow 0.15s ease,
+			color 0.15s ease,
+			translate 0.2s ease;
+	}
+	.tool:hover {
+		box-shadow: inset 0 0 0 1.5px var(--accent);
+		color: var(--accent);
+		translate: 0 -2px;
+	}
 	.cta {
+		position: relative;
+		overflow: hidden;
 		padding: 2.25rem 1.5rem;
 		border-radius: 1.5rem;
 		background: var(--band);

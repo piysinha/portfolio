@@ -103,8 +103,8 @@ const learning = [
 		<h2 id="career-heading" class="section-heading">Career path</h2>
 		<ol class="timeline mt-8">
 			{
-				career.map(({ when, role, where, what }) => (
-					<li class="step">
+				career.map(({ when, role, where, what }, i) => (
+					<li class="step" data-reveal style={`--d:${i}`}>
 						<p class="text-sm font-semibold text-ink-2 tabular-nums">{when}</p>
 						<h3 class="mt-1 font-wide text-lg font-bold">{role}</h3>
 						<p class="font-medium">{where}</p>
@@ -119,8 +119,8 @@ const learning = [
 		<h2 id="learning-heading" class="section-heading">Certifications and education</h2>
 		<ul class="mt-6 grid border-t border-rule">
 			{
-				learning.map(({ name, when }) => (
-					<li class="grid gap-1 border-b border-rule py-4 sm:grid-cols-[1fr_auto] sm:gap-6">
+				learning.map(({ name, when }, i) => (
+					<li class="grid gap-1 border-b border-rule py-4 sm:grid-cols-[1fr_auto] sm:gap-6" data-reveal style={`--d:${i}`}>
 						<span class="font-semibold">{name}</span>
 						<span class="text-ink-2 tabular-nums">{when}</span>
 					</li>

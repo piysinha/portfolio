@@ -79,7 +79,8 @@ test('a trend bar shows its run in a tooltip on hover and keyboard focus', async
 
 for (const colorScheme of ['light', 'dark'] as const) {
 	test(`the dashboard has no accessibility violations with a failing run in ${colorScheme} theme`, async ({ page }) => {
-		await page.emulateMedia({ colorScheme });
+		// Axe checks the settled design: mid-animation colours are not what Visitors read.
+		await page.emulateMedia({ colorScheme, reducedMotion: 'reduce' });
 		await serveSummary(page, summaryWith([run('gate', 1, 'failed'), run('gate', 2)], [run('smoke', 1, 'failed')]));
 		await page.goto('/quality');
 		await expect(overall(page)).toContainText('Production check failing');

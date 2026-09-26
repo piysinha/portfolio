@@ -251,6 +251,64 @@
 		border-color: var(--accent);
 	}
 
+	/* The pointer spotlight (data-spotlight sets --mx and --my). It sits behind the text, so contrast holds. */
+	[data-spotlight] {
+		isolation: isolate;
+	}
+
+	[data-spotlight]::before {
+		content: '';
+		position: absolute;
+		inset: 0;
+		z-index: -1;
+		border-radius: inherit;
+		background: radial-gradient(
+			22rem circle at var(--mx, 50%) var(--my, 50%),
+			color-mix(in srgb, var(--accent) 13%, transparent),
+			transparent 70%
+		);
+		opacity: 0;
+		transition: opacity 0.25s ease;
+		pointer-events: none;
+	}
+
+	[data-spotlight]:hover::before {
+		opacity: 1;
+	}
+
+	/* An arrow slides in on hover, pointing to the entry's own page. */
+	.entry-arrow {
+		position: absolute;
+		top: 1.2rem;
+		right: 1.2rem;
+		display: grid;
+		place-items: center;
+		width: 2rem;
+		height: 2rem;
+		border-radius: 50%;
+		background: var(--accent-soft);
+		color: var(--accent);
+		opacity: 0;
+		translate: -6px 6px;
+		transition:
+			opacity 0.2s ease,
+			translate 0.25s cubic-bezier(0.2, 0.8, 0.2, 1);
+	}
+
+	.entry-card:hover .entry-arrow,
+	.entry-card:focus-within .entry-arrow {
+		opacity: 1;
+		translate: 0 0;
+	}
+
+	.entry-arrow svg {
+		fill: none;
+		stroke: currentColor;
+		stroke-width: 2.2;
+		stroke-linecap: round;
+		stroke-linejoin: round;
+	}
+
 	.entry-card h2,
 	.entry-card h3 {
 		font-size: 1.25rem;
@@ -443,6 +501,87 @@
 		margin-left: 0.2em;
 		font-size: 0.85em;
 		text-decoration: none;
+	}
+}
+
+/* ---------- Motion (none of it for Visitors who prefer reduced motion) ---------- */
+
+@media (prefers-reduced-motion: no-preference) {
+	/* Scroll reveal: hidden only when JavaScript can reveal it again. --d staggers siblings. A one-off
+	   animation rather than a transition, so it never delays or overrides hover effects afterwards. */
+	.js [data-reveal]:not(.is-in) {
+		opacity: 0;
+	}
+
+	.js [data-reveal].is-in {
+		animation: reveal 0.7s cubic-bezier(0.2, 0.8, 0.2, 1) backwards;
+		animation-delay: calc(var(--d, 0) * 90ms);
+	}
+
+	/* Page titles rise out of a mask, and what follows them fades up. */
+	.page-hero h1:not(.name) {
+		animation: title-rise 0.85s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+	}
+
+	.page-hero h1:not(.name) ~ * {
+		animation: fade-up 0.7s cubic-bezier(0.2, 0.8, 0.2, 1) 0.18s both;
+	}
+
+	.btn {
+		transition:
+			background-color 0.15s ease,
+			border-color 0.15s ease,
+			color 0.15s ease,
+			translate 0.2s ease,
+			box-shadow 0.2s ease;
+	}
+
+	.btn:hover {
+		translate: 0 -2px;
+	}
+
+	.btn-primary:hover {
+		box-shadow: 0 10px 24px -12px var(--accent);
+	}
+
+	.btn:active {
+		translate: 0 0;
+	}
+
+	.entry-card:not(.is-row) {
+		transition:
+			border-color 0.2s ease,
+			translate 0.25s cubic-bezier(0.2, 0.8, 0.2, 1),
+			box-shadow 0.25s ease;
+	}
+
+	.entry-card:not(.is-row):hover {
+		translate: 0 -4px;
+		box-shadow: 0 18px 36px -24px rgb(18 23 53 / 0.45);
+	}
+}
+
+@keyframes reveal {
+	from {
+		opacity: 0;
+		translate: 0 22px;
+	}
+}
+
+@keyframes title-rise {
+	from {
+		clip-path: inset(0 0 100% 0);
+		translate: 0 0.35em;
+	}
+	to {
+		clip-path: inset(-20% -5% -30% -5%);
+	}
+}
+
+@keyframes fade-up {
+	from {
+		opacity: 0;
+		translate: 0 14px;
 	}
 }
 

@@ -121,8 +121,9 @@ const current = Astro.url.pathname.replace(/(\/index)?(\.html)?\/?$/, '') || '/'
 			color: var(--ink);
 			font-weight: 650;
 		}
-		/* The current page is underlined in the accent, sitting on the header's bottom rule. */
-		.nav-link[aria-current='page']::after {
+		/* The current page is underlined in the accent, sitting on the header's bottom rule. On hover,
+		   the underline grows out from the middle of any other link. */
+		.nav-link::after {
 			content: '';
 			position: absolute;
 			right: 0.7rem;
@@ -131,6 +132,14 @@ const current = Astro.url.pathname.replace(/(\/index)?(\.html)?\/?$/, '') || '/'
 			height: 3px;
 			border-radius: 3px 3px 0 0;
 			background: var(--accent);
+			scale: 0 1;
+			transition: scale 0.25s cubic-bezier(0.2, 0.8, 0.2, 1);
+		}
+		.nav-link:hover::after {
+			scale: 0.6 1;
+		}
+		.nav-link[aria-current='page']::after {
+			scale: 1 1;
 		}
 	}
 
@@ -150,6 +159,15 @@ const current = Astro.url.pathname.replace(/(\/index)?(\.html)?\/?$/, '') || '/'
 	}
 	.icon-button:hover {
 		border-color: var(--ink);
+	}
+	.theme-toggle svg {
+		transition: rotate 0.5s cubic-bezier(0.2, 0.8, 0.2, 1);
+	}
+	.theme-toggle .moon {
+		transition: fill 0.3s ease;
+	}
+	.theme-toggle[aria-pressed='true'] svg {
+		rotate: -30deg;
 	}
 	.theme-toggle[aria-pressed='true'] .moon {
 		fill: currentColor;
