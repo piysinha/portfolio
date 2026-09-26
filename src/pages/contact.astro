@@ -1,10 +1,281 @@
 ---
+import ExternalLink from '../components/ExternalLink.astro';
 import BaseLayout from '../layouts/BaseLayout.astro';
+import { botTrapField, limits, topics } from '../lib/enquiry';
+import { owner, turnstileSiteKey } from '../lib/site';
 ---
 
 <BaseLayout title="Contact">
 	<Fragment slot="hero">
 		<h1>Contact</h1>
-		<p class="lede">Coming soon.</p>
+		<p class="lede">Hiring, a freelance project or something else? Send me a message.</p>
 	</Fragment>
+
+	<div class="contact">
+		<form class="enquiry-form" action="/api/enquiry" method="post" novalidate data-site-key={turnstileSiteKey}>
+			<div class="field">
+				<label for="name">Name</label>
+				<input id="name" name="name" autocomplete="name" maxlength={limits.name} aria-describedby="name-error" />
+				<p class="field-error" id="name-error" data-error-for="name"></p>
+			</div>
+			<div class="field">
+				<label for="email">Email</label>
+				<input
+					id="email"
+					name="email"
+					type="email"
+					autocomplete="email"
+					maxlength={limits.email}
+					aria-describedby="email-error"
+				/>
+				<p class="field-error" id="email-error" data-error-for="email"></p>
+			</div>
+			<fieldset class="field" aria-describedby="topic-error">
+				<legend>What's it about?</legend>
+				<p class="field-error" id="topic-error" data-error-for="topic"></p>
+				<div class="choices">
+					{
+						topics.map((topic) => (
+							<label class="choice">
+								<input type="radio" name="topic" value={topic} />
+								{topic}
+							</label>
+						))
+					}
+				</div>
+			</fieldset>
+			<div class="field">
+				<label for="message">Message</label>
+				<textarea id="message" name="message" rows="7" maxlength={limits.message.max} aria-describedby="message-error"
+				></textarea>
+				<p class="field-error" id="message-error" data-error-for="message"></p>
+			</div>
+			<div class="bot-trap" aria-hidden="true">
+				<label for={botTrapField}>Leave this field empty</label>
+				<input id={botTrapField} name={botTrapField} tabindex="-1" autocomplete="off" />
+			</div>
+			<div class="turnstile" data-turnstile></div>
+			<button class="button button-primary" type="submit">Send message</button>
+		</form>
+		<p class="form-status" role="status" tabindex="-1" data-status></p>
+		<template id="send-failed">
+			Your message didn't send. Please try again, or message me on <ExternalLink href={owner.links.linkedin}
+				>LinkedIn</ExternalLink
+			>.
+		</template>
+		<noscript>
+			<p>
+				The contact form needs JavaScript. You can message me on <ExternalLink href={owner.links.linkedin}
+					>LinkedIn</ExternalLink
+				> instead.
+			</p>
+		</noscript>
+	</div>
 </BaseLayout>
+
+<script>
+	import { parseEnquiry, type EnquiryErrors } from '../lib/enquiry';
+
+	interface Turnstile {
+		render(container: HTMLElement, options: Record<string, unknown>): string;
+		reset(widgetId: string): void;
+		getResponse(widgetId: string): string | undefined;
+	}
+	const page = window as Window & { turnstile?: Turnstile; onEnquiryTurnstileLoad?: () => void };
+
+	const form = document.querySelector<HTMLFormElement>('.enquiry-form')!;
+	const status = document.querySelector<HTMLElement>('[data-status]')!;
+	const button = form.querySelector<HTMLButtonElement>('button[type="submit"]')!;
+	const failure = document.querySelector<HTMLTemplateElement>('#send-failed')!;
+	const fields = ['name', 'email', 'topic', 'message'] as const;
+
+	// Turnstile loads only once the Visitor starts on the form, so other visits never contact Cloudflare.
+	let widgetId: string | undefined;
+	let loading: Promise<void> | undefined;
+	let tokenWaiters: { resolve: () => void; reject: () => void }[] = [];
+	const settleWaiters = (outcome: 'resolve' | 'reject') => tokenWaiters.splice(0).forEach((waiter) => waiter[outcome]());
+
+	/** The flexible widget needs at least 300px, so narrower phones get the compact one. */
+	function widgetSize() {
+		const style = getComputedStyle(form);
+		const width = form.clientWidth - parseFloat(style.paddingLeft) - parseFloat(style.paddingRight);
+		return width >= 300 ? 'flexible' : 'compact';
+	}
+
+	function loadTurnstile() {
+		loading ??= new Promise<void>((resolve, reject) => {
+			page.onEnquiryTurnstileLoad = () => {
+				widgetId = page.turnstile!.render(form.querySelector<HTMLElement>('[data-turnstile]')!, {
+					sitekey: form.dataset.siteKey,
+					theme: document.documentElement.dataset.theme === 'dark' ? 'dark' : 'light',
+					size: widgetSize(),
+					callback: () => settleWaiters('resolve'),
+					'error-callback': () => {
+						settleWaiters('reject');
+						return true;
+					},
+				});
+				resolve();
+			};
+			const script = document.createElement('script');
+			script.src = 'https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit&onload=onEnquiryTurnstileLoad';
+			script.async = true;
+			script.onerror = () => {
+				loading = undefined;
+				script.remove();
+				reject(new Error('Turnstile did not load'));
+			};
+			document.head.append(script);
+		});
+		return loading;
+	}
+
+	/** Resolves once Turnstile has put a token in the form. */
+	async function humanCheck() {
+		await loadTurnstile();
+		if (page.turnstile!.getResponse(widgetId!)) return;
+		await new Promise<void>((resolve, reject) => tokenWaiters.push({ resolve, reject }));
+	}
+
+	function showErrors(errors: EnquiryErrors) {
+		for (const field of fields) {
+			form.querySelector(`[data-error-for="${field}"]`)!.textContent = errors[field] ?? '';
+			for (const input of form.querySelectorAll(`[name="${field}"]`)) {
+				if (errors[field]) input.setAttribute('aria-invalid', 'true');
+				else input.removeAttribute('aria-invalid');
+			}
+		}
+		const first = fields.find((field) => errors[field]);
+		if (first) form.querySelector<HTMLElement>(`[name="${first}"]`)?.focus();
+	}
+
+	form.addEventListener('focusin', () => loadTurnstile().catch(() => {}), { once: true });
+
+	form.addEventListener('submit', async (event) => {
+		event.preventDefault();
+		const parsed = parseEnquiry(Object.fromEntries(new FormData(form)));
+		showErrors(parsed.ok ? {} : parsed.errors);
+		if (!parsed.ok) return;
+
+		button.disabled = true;
+		button.textContent = 'Sending…';
+		status.replaceChildren();
+		try {
+			await humanCheck();
+			const response = await fetch(form.action, { method: 'POST', body: new FormData(form) });
+			const result: { ok?: boolean } = await response.json();
+			if (!response.ok || !result.ok) throw new Error('Not sent');
+			form.hidden = true;
+			status.textContent = `Thanks, ${parsed.enquiry.name}. Your message has been sent.`;
+			status.focus();
+		} catch {
+			status.replaceChildren(failure.content.cloneNode(true));
+			// A Turnstile token works only once, so get a fresh one for the next try.
+			if (widgetId) page.turnstile?.reset(widgetId);
+		} finally {
+			button.disabled = false;
+			button.textContent = 'Send message';
+		}
+	});
+</script>
+
+<style>
+	.contact {
+		max-width: 40rem;
+	}
+	/* The form needs JavaScript (Turnstile); without it, the noscript note points to LinkedIn. */
+	:global(html:not(.js)) .enquiry-form {
+		display: none;
+	}
+	/* A plain panel, not a gradient tile, so axe can check the contrast of everything in it. */
+	.enquiry-form {
+		display: grid;
+		gap: 1.25rem;
+		padding: 1.5rem;
+		border: 1px solid var(--border);
+		border-radius: 1.25rem;
+		background: var(--surface);
+		box-shadow: var(--shadow);
+	}
+	.enquiry-form[hidden] {
+		display: none;
+	}
+	.field {
+		display: grid;
+		gap: 0.4rem;
+		margin: 0;
+		padding: 0;
+		border: 0;
+		min-width: 0;
+	}
+	label,
+	legend {
+		font-weight: 600;
+	}
+	legend {
+		padding: 0;
+		margin-bottom: 0.4rem;
+	}
+	input:not([type='radio']),
+	textarea {
+		width: 100%;
+		padding: 0.65rem 0.8rem;
+		border: 1px solid var(--border);
+		border-radius: 0.75rem;
+		background: var(--bg);
+		color: var(--text);
+		font: inherit;
+	}
+	textarea {
+		resize: vertical;
+	}
+	[aria-invalid='true'] {
+		border-color: var(--danger);
+	}
+	.choices {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 0.5rem 1.25rem;
+	}
+	.choice {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.45rem;
+		font-weight: 400;
+	}
+	.choice input {
+		accent-color: var(--accent);
+	}
+	.field-error {
+		margin: 0;
+		color: var(--danger);
+		font-size: 0.9rem;
+	}
+	.field-error:empty {
+		display: none;
+	}
+	/* Hidden from people, but a plain input to bots. */
+	.bot-trap {
+		position: absolute;
+		left: -10000px;
+		width: 1px;
+		height: 1px;
+		overflow: hidden;
+	}
+	.turnstile:empty {
+		display: none;
+	}
+	.enquiry-form button {
+		justify-self: start;
+	}
+	.enquiry-form button:disabled {
+		cursor: progress;
+		opacity: 0.7;
+	}
+	.form-status {
+		margin: 1rem 0 0;
+	}
+	.form-status:empty {
+		display: none;
+	}
+</style>

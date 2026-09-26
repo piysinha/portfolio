@@ -117,6 +117,8 @@ jobs:
       - name: Skip production outside main
         if: github.ref != 'refs/heads/main'
         run: echo "Gate passed on ${{ github.ref_name }}; production deploy only runs on main."
+      # dist/ carries the compiled Enquiry Function (_worker.js and _routes.json from npm run build),
+      # so production gets the same Worker the Gate run tested, without a checkout of functions/.
       - name: Deploy the tested build to production
         if: github.ref == 'refs/heads/main'
         uses: cloudflare/wrangler-action@v4
