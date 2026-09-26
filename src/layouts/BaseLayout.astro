@@ -83,6 +83,19 @@ const { title, description = owner.description } = Astro.props;
 			</div>
 		</footer>
 		<script>
+			// Cookieless page-view counts, for real Visitors on the live site only (see src/lib/analytics.ts).
+			import { beaconSrc, shouldCountVisit } from '../lib/analytics';
+			import { webAnalyticsToken } from '../lib/site';
+
+			if (shouldCountVisit(webAnalyticsToken, location.hostname, navigator.webdriver)) {
+				const beacon = document.createElement('script');
+				beacon.defer = true;
+				beacon.src = beaconSrc;
+				beacon.dataset.cfBeacon = JSON.stringify({ token: webAnalyticsToken });
+				document.head.append(beacon);
+			}
+		</script>
+		<script>
 			// Motion for every page. All of it is skipped for Visitors who prefer reduced motion, and content
 			// is never hidden without JavaScript (the reveal styles apply only under html.js).
 			const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
