@@ -18,6 +18,12 @@ export const owner = {
  */
 export const turnstileSiteKey = '0x4AAAAAAFEJL2Zuds-Q_zXX';
 
+/**
+ * Cloudflare Web Analytics site token for piyush-sinha-portfolio.pages.dev. Public by design (it is in
+ * every page's source); an empty token turns analytics off. See src/lib/analytics.ts.
+ */
+export const webAnalyticsToken = '6fce0a3afdf04e06b7d9074728dd0eac';
+
 /** The reports site (ADR-0002): every Test run's report, and summary.json for the Quality dashboard. */
 export const reports = {
 	site: 'https://piyush-sinha-test-reports.pages.dev/',
