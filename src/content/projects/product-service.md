@@ -1,6 +1,6 @@
 ---
 title: Product catalogue service
-summary: Product and category APIs in Spring Boot over MySQL, with Redis caching for an external product source and support for tokens issued by the user service.
+summary: Product and category APIs in Spring Boot over MySQL, with Redis caching for an external product source. Anyone can browse; changing the catalogue needs a token from the user service.
 area: Backend
 tags: [Java, Spring Boot, Redis, MySQL, Flyway]
 repo: https://github.com/piysinha/ProductService
@@ -13,7 +13,7 @@ The catalogue service in a small microservices backend, built during Scaler's ba
 
 - REST APIs to list (with pagination), read, create, update and delete products, plus categories, with a controller advice that turns errors into consistent responses.
 - Two implementations behind one `ProductService` interface: one stores products in MySQL, the other reads them from an external store API and caches them in Redis.
-- Set up as an OAuth2 resource server for JWTs issued by the user service, with roles read from the token's claims.
+- Browsing is public. Adding, updating or deleting a product needs an OAuth2 access token from the user service, checked as a resource server, with roles read from the token's claims.
 
 ## How it's built
 
