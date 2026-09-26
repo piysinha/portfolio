@@ -40,7 +40,11 @@ test('Visitor sends an Enquiry and sees it confirmed', async ({ page }) => {
 	await fillEnquiry(page);
 	await sendButton(page).click();
 
-	await expect(page.getByRole('status')).toHaveText('Thanks, Ada Lovelace. Your message has been sent.');
+	const confirmation = page.getByRole('status');
+	await expect(confirmation).toContainText('Thanks, Ada Lovelace. Your message has been sent.');
+	await expect(confirmation.getByRole('link', { name: 'See my Projects' })).toHaveAttribute('href', '/projects');
+	await expect(confirmation.getByRole('link', { name: 'Back to Home' })).toHaveAttribute('href', '/');
+	await expect(sendButton(page)).toBeHidden();
 	expect(sent).toEqual([
 		{
 			name: 'Ada Lovelace',
@@ -91,7 +95,7 @@ test("a failed send keeps the Visitor's message, offers LinkedIn, and can be ret
 
 	await sendButton(page).click();
 
-	await expect(status).toHaveText('Thanks, Ada Lovelace. Your message has been sent.');
+	await expect(status).toContainText('Thanks, Ada Lovelace. Your message has been sent.');
 	expect(sent.map((enquiry) => enquiry['cf-turnstile-response']), 'each try has a fresh token').toEqual([
 		'fake-token-1',
 		'fake-token-2',
@@ -128,6 +132,22 @@ for (const colorScheme of ['light', 'dark'] as const) {
 		await page.goto('/contact');
 		await sendButton(page).click();
 		await expect(page.getByLabel('Name', { exact: true })).toHaveAccessibleDescription('Enter your name.');
+
+		const results = await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa']).analyze();
+
+		expect(results.violations).toEqual([]);
+	});
+}
+
+for (const colorScheme of ['light', 'dark'] as const) {
+	test(`the confirmation has no accessibility violations in ${colorScheme} theme`, async ({ page }) => {
+		await page.emulateMedia({ colorScheme });
+		await fakeTurnstile(page);
+		await mockEnquiryApi(page, sentReply);
+		await page.goto('/contact');
+		await fillEnquiry(page);
+		await sendButton(page).click();
+		await expect(page.getByRole('status')).toContainText('Your message has been sent.');
 
 		const results = await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa']).analyze();
 
