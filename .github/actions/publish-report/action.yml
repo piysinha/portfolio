@@ -31,7 +31,8 @@ runs:
         apiToken: ${{ inputs.api-token }}
         accountId: ${{ inputs.account-id }}
         wranglerVersion: ${{ env.WRANGLER_VERSION }}
-        command: pages deploy ${{ inputs.report-dir }} --project-name=${{ env.REPORTS_PROJECT }} --branch=${{ inputs.kind }} --commit-dirty=true
+        # --cwd keeps wrangler away from the repo's functions/, so reports never carry the Enquiry Function.
+        command: pages deploy . --cwd=${{ inputs.report-dir }} --project-name=${{ env.REPORTS_PROJECT }} --branch=${{ inputs.kind }} --commit-dirty=true
 
     - name: Record the run in summary.json
       shell: bash
@@ -54,7 +55,7 @@ runs:
         apiToken: ${{ inputs.api-token }}
         accountId: ${{ inputs.account-id }}
         wranglerVersion: ${{ env.WRANGLER_VERSION }}
-        command: pages deploy reports-site --project-name=${{ env.REPORTS_PROJECT }} --branch=main --commit-dirty=true
+        command: pages deploy . --cwd=reports-site --project-name=${{ env.REPORTS_PROJECT }} --branch=main --commit-dirty=true
 
     - name: Delete reports trimmed from the history
       shell: bash
