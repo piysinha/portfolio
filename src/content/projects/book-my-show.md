@@ -11,6 +11,7 @@ A low-level design exercise from Scaler's backend course, modelled on BookMyShow
 
 ## How it's built
 
-- Booking runs in a serializable transaction: it checks that every requested seat is free, blocks the seats and creates a pending booking in one step.
+- Booking runs in a serializable transaction: it checks that every requested seat exists, belongs to the show and is free, holds the seats and creates a pending booking in one step.
+- A hold lasts 15 minutes. If the booking isn't paid by then, the seat can be booked again.
 - Prices come from a separate price calculator, based on each seat's type for that show.
 - A model of regions, theatres, screens, seats, shows and payments.

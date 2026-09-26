@@ -12,8 +12,8 @@ A compact framework built for an automation assessment, covering UI and API test
 ## What it covers
 
 - **UI journeys** on a demo shop: sorting products by price, adding items to the cart and completing checkout.
-- **API tests** against a public REST API: listing, creating and deleting users, with each response checked against a TypeScript type.
-- **Protected routes**: a signed-out visitor is sent back to the login page.
+- **API tests** against a public REST API: listing, creating and deleting users, with typed responses and checks on the fields that come back.
+- **Login and protected routes**: a valid login reaches the secure area, and a signed-out visitor is sent back to the login page.
 
 ## How it's built
 

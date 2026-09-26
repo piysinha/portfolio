@@ -11,10 +11,10 @@ The payment service in a small microservices backend, built during Scaler's back
 
 ## What it does
 
-- Takes an order amount and returns a Stripe payment link, which redirects the customer when payment is complete.
-- A separate controller has an endpoint ready for Stripe's webhook events, as the place to confirm payments.
+- Creates a Stripe payment link for an order, which sends the customer to a configured page once they've paid.
+- A webhook endpoint checks the signature on every Stripe event, rejecting forged or replayed ones, and logs completed payments.
 
 ## How it's built
 
 - A `PaymentGateway` interface with a Stripe implementation, so the rest of the service doesn't depend on Stripe directly.
-- The Stripe secret key is read from configuration, never from the code.
+- The Stripe secret key, the webhook signing secret and the redirect page come from environment variables, never from the code.
