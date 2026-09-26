@@ -10,3 +10,4 @@ test-results/
 visual-report/
 results/
 reports-site/
+.dev.vars*

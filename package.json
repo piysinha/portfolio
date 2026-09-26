@@ -7,7 +7,7 @@
   },
   "scripts": {
     "dev": "astro dev",
-    "build": "astro build",
+    "build": "astro build && wrangler pages functions build --outdir dist/_worker.js --output-routes-path dist/_routes.json",
     "preview": "astro preview",
     "check": "astro check",
     "test": "vitest run",
