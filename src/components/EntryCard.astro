@@ -1,4 +1,5 @@
 ---
+import type { FeaturedItem } from '../lib/featured';
 import EntryMeta from './EntryMeta.astro';
 
 interface Props {
@@ -7,13 +8,19 @@ interface Props {
 	summary: string;
 	date: Date;
 	tags: string[];
+	/** Shown above the title where Projects and Case studies are mixed. */
+	kind?: FeaturedItem['kind'];
+	/** Heading level for the title, so cards nest under their section's heading. */
+	level?: 2 | 3;
 }
 
-const { title, href, summary, date, tags } = Astro.props;
+const { title, href, summary, date, tags, kind, level = 2 } = Astro.props;
+const Heading = `h${level}` as const;
 ---
 
 <article class="entry-card">
-	<h2><a href={href}>{title}</a></h2>
+	{kind && <p class="entry-kind" data-testid="kind">{kind}</p>}
+	<Heading><a href={href}>{title}</a></Heading>
 	<p data-testid="summary">{summary}</p>
 	<EntryMeta date={date} tags={tags} />
 </article>

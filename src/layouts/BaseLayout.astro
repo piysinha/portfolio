@@ -1,4 +1,6 @@
 ---
+import '@fontsource-variable/jetbrains-mono';
+import '@fontsource-variable/sora';
 import Header from '../components/Header.astro';
 import { pageTitle } from '../lib/site';
 import '../styles/global.css';
@@ -33,9 +35,36 @@ const { title } = Astro.props;
 		<title>{pageTitle(title)}</title>
 	</head>
 	<body>
-		<Header />
+		<div class="site-top">
+			<Header />
+		</div>
 		<main>
-			<slot />
+			{
+				Astro.slots.has('hero') && (
+					<section class="page-hero">
+						<div class="page-hero-inner">
+							<slot name="hero" />
+						</div>
+					</section>
+				)
+			}
+			{
+				Astro.slots.has('default') && (
+					<div class="page-body">
+						<slot />
+					</div>
+				)
+			}
 		</main>
+		<script>
+			// Tiles and cards glow where the pointer is.
+			for (const card of document.querySelectorAll<HTMLElement>('.tile, .entry-card')) {
+				card.addEventListener('pointermove', (event) => {
+					const box = card.getBoundingClientRect();
+					card.style.setProperty('--mx', `${event.clientX - box.left}px`);
+					card.style.setProperty('--my', `${event.clientY - box.top}px`);
+				});
+			}
+		</script>
 	</body>
 </html>

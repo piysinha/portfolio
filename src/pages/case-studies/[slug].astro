@@ -17,9 +17,12 @@ const { Content } = await render(caseStudy);
 ---
 
 <BaseLayout title={caseStudy.data.title}>
-	<article class="entry">
+	<Fragment slot="hero">
+		<p class="eyebrow">Case study</p>
 		<h1>{caseStudy.data.title}</h1>
 		<EntryMeta date={caseStudy.data.date} tags={caseStudy.data.tags} />
+	</Fragment>
+	<article class="prose">
 		<h2>Problem</h2>
 		<p>{caseStudy.data.problem}</p>
 		<h2>Approach</h2>

@@ -1,6 +1,7 @@
 ---
 import { getCollection, render, type CollectionEntry } from 'astro:content';
 import EntryMeta from '../../components/EntryMeta.astro';
+import ExternalLink from '../../components/ExternalLink.astro';
 import BaseLayout from '../../layouts/BaseLayout.astro';
 
 export async function getStaticPaths() {
@@ -17,14 +18,23 @@ const { Content } = await render(project);
 ---
 
 <BaseLayout title={project.data.title}>
-	<article class="entry">
+	<Fragment slot="hero">
+		<p class="eyebrow">Project</p>
 		<h1>{project.data.title}</h1>
 		<p class="lede">{project.data.summary}</p>
 		<EntryMeta date={project.data.date} tags={project.data.tags} />
 		<ul class="entry-links">
-			<li><a href={project.data.repo}>Source code</a></li>
-			{project.data.live && <li><a href={project.data.live}>Live site</a></li>}
+			<li><ExternalLink class="button button-primary" href={project.data.repo}>Source code</ExternalLink></li>
+			{
+				project.data.live && (
+					<li>
+						<ExternalLink class="button" href={project.data.live}>Live site</ExternalLink>
+					</li>
+				)
+			}
 		</ul>
+	</Fragment>
+	<article class="prose">
 		<Content />
 	</article>
 </BaseLayout>
