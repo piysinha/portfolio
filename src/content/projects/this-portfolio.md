@@ -2,7 +2,7 @@
 title: This portfolio
 summary: The site you're reading. No change reaches production until it passes the full Playwright suite in three browsers and on a phone, and the results are public.
 area: Test automation
-tags: [Playwright, TypeScript, Astro, GitHub Actions, Cloudflare Pages]
+tags: [Playwright, TypeScript, Astro, Tailwind CSS, GitHub Actions, Cloudflare Pages]
 repo: https://github.com/piysinha/portfolio
 live: https://piyush-sinha-portfolio.pages.dev
 date: 2026-09-26

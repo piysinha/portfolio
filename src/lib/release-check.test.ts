@@ -29,6 +29,14 @@ describe('releaseCheck', () => {
 		});
 	});
 
+	it('counts flaky tests in the total, and says they passed only after a retry', () => {
+		const flakyGate = { ...run('gate', 2), counts: { passed: 290, failed: 0, flaky: 2, skipped: 17 } };
+		const check = releaseCheck(view([flakyGate], [run('smoke', 1)]));
+
+		expect(check.claim).toBe("This site's latest release passed all 292 of its tests");
+		expect(check.detail).toBe('In Chromium, Firefox, WebKit and a phone, 2 hours ago. 2 passed after a retry.');
+	});
+
 	it('says plainly when the live site fails its Smoke run', () => {
 		const check = releaseCheck(view([run('gate', 2)], [run('smoke', 1, 'failed')]));
 

@@ -37,10 +37,13 @@ export function releaseCheck(view: DashboardView | undefined): ReleaseCheck {
 	switch (view?.overall) {
 		case 'healthy': {
 			if (!gate) return guaranteedCheck;
+			// A flaky test passed only on its retry, so it counts towards "all" but is named as such.
+			const { passed, flaky } = gate.counts;
+			const retried = flaky > 0 ? ` ${flaky} passed after a retry.` : '';
 			return {
 				state: 'passed',
-				claim: `This site's latest release passed all ${gate.counts.passed} of its tests`,
-				detail: `In ${browserList(gate.projects)}, ${gate.when}.`,
+				claim: `This site's latest release passed all ${passed + flaky} of its tests`,
+				detail: `In ${browserList(gate.projects)}, ${gate.when}.${retried}`,
 			};
 		}
 		case 'production-failing':
