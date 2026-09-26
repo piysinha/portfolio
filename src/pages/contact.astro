@@ -57,7 +57,14 @@ import { owner, turnstileSiteKey } from '../lib/site';
 			<div class="turnstile" data-turnstile></div>
 			<button class="button button-primary" type="submit">Send message</button>
 		</form>
-		<p class="form-status" role="status" tabindex="-1" data-status></p>
+		<div class="form-status" role="status" tabindex="-1" data-status></div>
+		<template id="sent">
+			<p class="sent-message">Thanks, <span data-name></span>. Your message has been sent.</p>
+			<p class="sent-links">
+				<a class="button button-primary" href="/projects">See my Projects</a>
+				<a class="button" href="/">Back to Home</a>
+			</p>
+		</template>
 		<template id="send-failed">
 			Your message didn't send. Please try again, or message me on <ExternalLink href={owner.links.linkedin}
 				>LinkedIn</ExternalLink
@@ -86,6 +93,7 @@ import { owner, turnstileSiteKey } from '../lib/site';
 	const form = document.querySelector<HTMLFormElement>('.enquiry-form')!;
 	const status = document.querySelector<HTMLElement>('[data-status]')!;
 	const button = form.querySelector<HTMLButtonElement>('button[type="submit"]')!;
+	const sentTemplate = document.querySelector<HTMLTemplateElement>('#sent')!;
 	const failure = document.querySelector<HTMLTemplateElement>('#send-failed')!;
 	const fields = ['name', 'email', 'topic', 'message'] as const;
 
@@ -165,8 +173,11 @@ import { owner, turnstileSiteKey } from '../lib/site';
 			const response = await fetch(form.action, { method: 'POST', body: new FormData(form) });
 			const result: { ok?: boolean } = await response.json();
 			if (!response.ok || !result.ok) throw new Error('Not sent');
+			const confirmation = sentTemplate.content.cloneNode(true) as DocumentFragment;
+			confirmation.querySelector('[data-name]')!.textContent = parsed.enquiry.name;
 			form.hidden = true;
-			status.textContent = `Thanks, ${parsed.enquiry.name}. Your message has been sent.`;
+			status.dataset.state = 'sent';
+			status.replaceChildren(confirmation);
 			status.focus();
 		} catch {
 			status.replaceChildren(failure.content.cloneNode(true));
@@ -188,14 +199,17 @@ import { owner, turnstileSiteKey } from '../lib/site';
 		display: none;
 	}
 	/* A plain panel, not a gradient tile, so axe can check the contrast of everything in it. */
-	.enquiry-form {
-		display: grid;
-		gap: 1.25rem;
+	.enquiry-form,
+	.form-status[data-state='sent'] {
 		padding: 1.5rem;
 		border: 1px solid var(--border);
 		border-radius: 1.25rem;
 		background: var(--surface);
 		box-shadow: var(--shadow);
+	}
+	.enquiry-form {
+		display: grid;
+		gap: 1.25rem;
 	}
 	.enquiry-form[hidden] {
 		display: none;
@@ -277,5 +291,19 @@ import { owner, turnstileSiteKey } from '../lib/site';
 	}
 	.form-status:empty {
 		display: none;
+	}
+	.form-status[data-state='sent'] {
+		margin: 0;
+	}
+	.form-status :global(.sent-message) {
+		margin: 0;
+		font-size: 1.15rem;
+		font-weight: 600;
+	}
+	.form-status :global(.sent-links) {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 0.75rem;
+		margin: 1.25rem 0 0;
 	}
 </style>
