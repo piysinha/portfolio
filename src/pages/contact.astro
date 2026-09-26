@@ -55,8 +55,10 @@ import { owner, turnstileSiteKey } from '../lib/site';
 				<label for={botTrapField}>Leave this field empty</label>
 				<input id={botTrapField} name={botTrapField} tabindex="-1" autocomplete="off" />
 			</div>
-			<div class="turnstile" data-turnstile></div>
 			<button class="btn btn-primary" type="submit">Send message</button>
+			{/* Below the button: the widget appears once the form is first focused, and above the button it would
+			    move the button between a press and its release, so the click would be lost. */}
+			<div class="turnstile" data-turnstile></div>
 		</form>
 		<div class="form-status" role="status" tabindex="-1" data-status></div>
 		<template id="sent">

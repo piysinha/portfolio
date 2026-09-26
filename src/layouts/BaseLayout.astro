@@ -47,8 +47,8 @@ const year = new Date().getFullYear();
 		<main class="flex-1">
 			{
 				Astro.slots.has('hero') && (
-					<section class="page-hero border-b border-rule">
-						<div class="mx-auto max-w-page px-4 pt-12 pb-10 sm:px-6 sm:pt-16 sm:pb-12">
+					<section class="page-hero">
+						<div class="mx-auto max-w-page px-4 pt-12 pb-4 sm:px-6 sm:pt-16 sm:pb-6">
 							<slot name="hero" />
 						</div>
 					</section>
