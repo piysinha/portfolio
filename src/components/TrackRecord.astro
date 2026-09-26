@@ -95,7 +95,7 @@ const results = [
 		line-height: 1.5;
 	}
 	/* Each tick draws once its result has scrolled into view. */
-	@media (prefers-reduced-motion: no-preference) {
+	@media screen and (prefers-reduced-motion: no-preference) {
 		:global(.js) .tick {
 			stroke-dasharray: 22;
 			stroke-dashoffset: 22;

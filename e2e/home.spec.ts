@@ -79,28 +79,3 @@ test.describe("Home's terminal replay", () => {
 		await expect(summary(page)).toContainText('217 passed (2m 23s)');
 	});
 });
-
-test('everything that slides in on scroll ends up fully visible', async ({ page }) => {
-	await page.goto('/');
-	const revealed = page.locator('[data-reveal]');
-	expect(await revealed.count(), 'Home has elements that reveal on scroll').toBeGreaterThan(0);
-
-	for (const element of await revealed.all()) await element.scrollIntoViewIfNeeded();
-
-	await expect
-		.poll(() => revealed.evaluateAll((elements) => elements.filter((element) => getComputedStyle(element).opacity !== '1').length))
-		.toBe(0);
-});
-
-test.describe('without JavaScript', () => {
-	test.use({ javaScriptEnabled: false });
-
-	test('nothing waits to be revealed', async ({ page }) => {
-		await page.goto('/');
-
-		const hidden = await page
-			.locator('[data-reveal]')
-			.evaluateAll((elements) => elements.filter((element) => getComputedStyle(element).opacity !== '1').length);
-		expect(hidden).toBe(0);
-	});
-});

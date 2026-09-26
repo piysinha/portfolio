@@ -160,6 +160,9 @@ const toolbox = [
 			translate: 0 14px;
 		}
 	}
+	.cta :global(:focus-visible) {
+		outline-color: var(--on-band);
+	}
 	/* A brighter spotlight on the dark band. */
 	.cta::before {
 		background: radial-gradient(28rem circle at var(--mx, 50%) var(--my, 50%), rgb(158 171 255 / 0.3), transparent 70%);

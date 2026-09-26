@@ -295,6 +295,12 @@
 			translate 0.25s cubic-bezier(0.2, 0.8, 0.2, 1);
 	}
 
+	/* Room for the arrow beside a title that starts the card. */
+	.entry-arrow + h2,
+	.entry-arrow + h3 {
+		padding-right: 2.5rem;
+	}
+
 	.entry-card:hover .entry-arrow,
 	.entry-card:focus-within .entry-arrow {
 		opacity: 1;
@@ -388,6 +394,12 @@
 			grid-row: 1 / span 3;
 			margin-top: 0.2rem;
 			padding-top: 0;
+			padding-right: 2.75rem;
+		}
+
+		/* In a wide row the title has the whole left column, so it needs no room for the arrow. */
+		.entry-card.is-row .entry-arrow + h3 {
+			padding-right: 0;
 		}
 	}
 
@@ -504,9 +516,9 @@
 	}
 }
 
-/* ---------- Motion (none of it for Visitors who prefer reduced motion) ---------- */
+/* ---------- Motion (none of it for Visitors who prefer reduced motion, and none in print) ---------- */
 
-@media (prefers-reduced-motion: no-preference) {
+@media screen and (prefers-reduced-motion: no-preference) {
 	/* Scroll reveal: hidden only when JavaScript can reveal it again. --d staggers siblings. A one-off
 	   animation rather than a transition, so it never delays or overrides hover effects afterwards. */
 	.js [data-reveal]:not(.is-in) {
