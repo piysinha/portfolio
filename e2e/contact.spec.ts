@@ -127,7 +127,8 @@ test('the Turnstile widget fits a small phone without sideways scrolling', async
 
 for (const colorScheme of ['light', 'dark'] as const) {
 	test(`the form has no accessibility violations while it shows errors in ${colorScheme} theme`, async ({ page }) => {
-		await page.emulateMedia({ colorScheme });
+		// Axe checks the settled design: mid-animation colours are not what Visitors read.
+		await page.emulateMedia({ colorScheme, reducedMotion: 'reduce' });
 		await fakeTurnstile(page);
 		await page.goto('/contact');
 		await sendButton(page).click();
@@ -141,7 +142,8 @@ for (const colorScheme of ['light', 'dark'] as const) {
 
 for (const colorScheme of ['light', 'dark'] as const) {
 	test(`the confirmation has no accessibility violations in ${colorScheme} theme`, async ({ page }) => {
-		await page.emulateMedia({ colorScheme });
+		// Axe checks the settled design: mid-animation colours are not what Visitors read.
+		await page.emulateMedia({ colorScheme, reducedMotion: 'reduce' });
 		await fakeTurnstile(page);
 		await mockEnquiryApi(page, sentReply);
 		await page.goto('/contact');
@@ -162,7 +164,8 @@ test.describe('without JavaScript', () => {
 		await page.goto('/contact');
 
 		await expect(sendButton(page)).toBeHidden();
-		await expect(page.getByRole('main').getByRole('link', { name: 'LinkedIn (opens in a new tab)' })).toHaveAttribute(
+		const note = page.getByRole('main').locator('p', { hasText: 'The contact form needs JavaScript' });
+		await expect(note.getByRole('link', { name: 'LinkedIn (opens in a new tab)' })).toHaveAttribute(
 			'href',
 			'https://www.linkedin.com/in/piyush-sinha-sdet',
 		);

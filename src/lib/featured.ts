@@ -14,7 +14,7 @@ interface ProjectLike {
 
 interface CaseStudyLike {
 	id: string;
-	data: EntryData & { problem: string };
+	data: EntryData & { problem: string; highlight?: string };
 }
 
 export interface FeaturedItem {
@@ -22,6 +22,8 @@ export interface FeaturedItem {
 	title: string;
 	href: string;
 	summary: string;
+	/** A Case study's headline result, if it has one. */
+	highlight?: string;
 	date: Date;
 	tags: string[];
 }
@@ -46,6 +48,7 @@ export function featuredWork(projects: ProjectLike[], caseStudies: CaseStudyLike
 				title: caseStudy.data.title,
 				href: `/case-studies/${caseStudy.id}`,
 				summary: caseStudy.data.problem,
+				highlight: caseStudy.data.highlight,
 				date: caseStudy.data.date,
 				tags: caseStudy.data.tags,
 			})),

@@ -13,7 +13,9 @@ export function isoDate(date: Date): string {
 	return date.toISOString().slice(0, 10);
 }
 
-/** Human-readable date, e.g. 26 Sep 2026. */
+const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+
+/** Human-readable month and year, e.g. Sep 2026. Formatted by hand so every browser shows the same text. */
 export function displayDate(date: Date): string {
-	return date.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'UTC' });
+	return `${MONTHS[date.getUTCMonth()]} ${date.getUTCFullYear()}`;
 }

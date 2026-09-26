@@ -1,5 +1,6 @@
 // @ts-check
 import { satteri } from '@astrojs/markdown-satteri';
+import tailwindcss from '@tailwindcss/vite';
 import { defineConfig } from 'astro/config';
 
 /** Links to other websites in Markdown content open in a new tab, matching ExternalLink.astro. */
@@ -37,4 +38,5 @@ export default defineConfig({
 	build: { format: 'file' },
 	trailingSlash: 'never',
 	markdown: { processor: satteri({ hastPlugins: [externalLinks] }) },
+	vite: { plugins: [tailwindcss()] },
 });

@@ -5,23 +5,41 @@ import { owner, sections } from '../lib/site';
 const current = Astro.url.pathname.replace(/(\/index)?(\.html)?\/?$/, '') || '/';
 ---
 
-<header class="site-header">
-	<a class="brand" href="/">{owner.name}</a>
-	<button class="theme-toggle" type="button" aria-pressed="false">Dark theme</button>
-	<button class="menu-button" type="button" aria-expanded="false" aria-controls="main-nav-links">Menu</button>
-	<nav aria-label="Main">
-		<ul id="main-nav-links">
-			{
-				sections.map((section) => (
-					<li>
-						<a href={section.path} aria-current={section.path === current ? 'page' : undefined}>
-							{section.name}
-						</a>
-					</li>
-				))
-			}
-		</ul>
-	</nav>
+<header class="site-header sticky top-0 z-30 border-b border-rule bg-paper">
+	<div class="mx-auto flex max-w-page flex-wrap items-center gap-x-2 px-4 sm:px-6">
+		<a class="brand font-wide mr-auto py-3 text-[1.0625rem] font-extrabold tracking-tight text-ink no-underline" href="/"
+			>{owner.name}</a
+		>
+		<nav aria-label="Main" class="nav order-3 basis-full lg:order-none lg:basis-auto">
+			<ul id="main-nav-links" class="flex flex-col pb-3 lg:flex-row lg:gap-1 lg:pb-0">
+				{
+					sections.map((section) => (
+						<li>
+							<a
+								class="nav-link"
+								href={section.path}
+								aria-current={section.path === current ? 'page' : undefined}
+							>
+								{section.name}
+							</a>
+						</li>
+					))
+				}
+			</ul>
+		</nav>
+		<button class="icon-button theme-toggle" type="button" aria-pressed="false" aria-label="Dark theme">
+			<svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+				<path class="moon" d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5Z"></path>
+			</svg>
+		</button>
+		<button class="icon-button menu-button" type="button" aria-expanded="false" aria-controls="main-nav-links">
+			<svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
+				<path class="bars" d="M4 7h16M4 12h16M4 17h16"></path>
+				<path class="cross" d="M6 6l12 12M18 6 6 18"></path>
+			</svg>
+			<span>Menu</span>
+		</button>
+	</div>
 </header>
 
 <script>
@@ -64,3 +82,119 @@ const current = Astro.url.pathname.replace(/(\/index)?(\.html)?\/?$/, '') || '/'
 		}
 	});
 </script>
+
+<style>
+	.nav-link {
+		display: flex;
+		align-items: center;
+		min-height: 3rem;
+		padding-inline: 0.25rem;
+		border-bottom: 1px solid var(--rule);
+		color: var(--ink);
+		font-size: 1.125rem;
+		font-weight: 550;
+		text-decoration: none;
+	}
+	.nav-link:hover {
+		color: var(--accent);
+	}
+	.nav-link[aria-current='page'] {
+		color: var(--accent);
+		font-weight: 700;
+	}
+	li:last-child .nav-link {
+		border-bottom: 0;
+	}
+	@media (min-width: 64rem) {
+		.nav-link {
+			position: relative;
+			min-height: 4rem;
+			padding-inline: 0.7rem;
+			border-bottom: 0;
+			color: var(--ink-2);
+			font-size: 0.975rem;
+		}
+		.nav-link:hover {
+			color: var(--ink);
+		}
+		.nav-link[aria-current='page'] {
+			color: var(--ink);
+			font-weight: 650;
+		}
+		/* The current page is underlined in the accent, sitting on the header's bottom rule. On hover,
+		   the underline grows out from the middle of any other link. */
+		.nav-link::after {
+			content: '';
+			position: absolute;
+			right: 0.7rem;
+			bottom: -1px;
+			left: 0.7rem;
+			height: 3px;
+			border-radius: 3px 3px 0 0;
+			background: var(--accent);
+			scale: 0 1;
+			transition: scale 0.25s cubic-bezier(0.2, 0.8, 0.2, 1);
+		}
+		.nav-link:hover::after {
+			scale: 0.6 1;
+		}
+		.nav-link[aria-current='page']::after {
+			scale: 1 1;
+		}
+	}
+
+	.icon-button {
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		gap: 0.4rem;
+		min-width: 2.75rem;
+		height: 2.75rem;
+		padding-inline: 0.65rem;
+		border: 1px solid var(--rule);
+		border-radius: 0.625rem;
+		color: var(--ink);
+		font-weight: 600;
+		cursor: pointer;
+	}
+	.icon-button:hover {
+		border-color: var(--ink);
+	}
+	.theme-toggle svg {
+		transition: rotate 0.5s cubic-bezier(0.2, 0.8, 0.2, 1);
+	}
+	.theme-toggle .moon {
+		transition: fill 0.3s ease;
+	}
+	.theme-toggle[aria-pressed='true'] svg {
+		rotate: -30deg;
+	}
+	.theme-toggle[aria-pressed='true'] .moon {
+		fill: currentColor;
+	}
+	.menu-button .cross,
+	.menu-button[aria-expanded='true'] .bars {
+		display: none;
+	}
+	.menu-button[aria-expanded='true'] .cross {
+		display: inline;
+	}
+
+	/* Both header buttons need JavaScript, so they are hidden without it and links are never trapped. */
+	.theme-toggle,
+	.menu-button {
+		display: none;
+	}
+	:global(.js) .theme-toggle {
+		display: inline-flex;
+		margin-left: 0.25rem;
+	}
+	@media (max-width: 63.999rem) {
+		:global(.js) .menu-button {
+			display: inline-flex;
+		}
+		:global(.js) .site-header:not([data-menu-open]) .nav {
+			display: none;
+		}
+	}
+</style>

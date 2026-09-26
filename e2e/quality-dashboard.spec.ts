@@ -1,33 +1,6 @@
 import AxeBuilder from '@axe-core/playwright';
 import { expect, test, type Page } from '@playwright/test';
-
-const SUMMARY_URL = 'https://piyush-sinha-test-reports.pages.dev/summary.json';
-
-const run = (kind: 'gate' | 'smoke', hoursAgo: number, status: 'passed' | 'failed' = 'passed') => ({
-	kind,
-	status,
-	startedAt: new Date(Date.now() - hoursAgo * 3_600_000).toISOString(),
-	durationMs: kind === 'gate' ? 143_000 : 13_800,
-	counts: { passed: kind === 'gate' ? 217 : 34, failed: status === 'failed' ? 2 : 0, flaky: 0, skipped: kind === 'gate' ? 7 : 0 },
-	projects: kind === 'gate' ? ['chromium', 'firefox', 'webkit', 'mobile-chrome'] : ['chromium', 'mobile-chrome'],
-	commit: 'ba9ad3b1234567890abcdef1234567890abcdef',
-	reportUrl: `https://${kind}${hoursAgo}.piyush-sinha-test-reports.pages.dev`,
-	runUrl: `https://github.com/piysinha/portfolio/actions/runs/${hoursAgo}`,
-	deploymentId: `${kind}-${hoursAgo}`,
-});
-
-const summaryWith = (gate: ReturnType<typeof run>[], smoke: ReturnType<typeof run>[]) => ({
-	updatedAt: new Date().toISOString(),
-	runs: { gate, smoke },
-});
-
-async function serveSummary(page: Page, summary: object | 'unreachable') {
-	await page.route(SUMMARY_URL, (route) =>
-		summary === 'unreachable'
-			? route.abort('connectionfailed')
-			: route.fulfill({ json: summary, headers: { 'access-control-allow-origin': '*' } }),
-	);
-}
+import { run, serveSummary, summaryWith } from './summary';
 
 const overall = (page: Page) => page.getByRole('status');
 const card = (page: Page, name: 'Gate run' | 'Smoke run') => page.getByRole('region', { name, exact: true });
@@ -106,7 +79,8 @@ test('a trend bar shows its run in a tooltip on hover and keyboard focus', async
 
 for (const colorScheme of ['light', 'dark'] as const) {
 	test(`the dashboard has no accessibility violations with a failing run in ${colorScheme} theme`, async ({ page }) => {
-		await page.emulateMedia({ colorScheme });
+		// Axe checks the settled design: mid-animation colours are not what Visitors read.
+		await page.emulateMedia({ colorScheme, reducedMotion: 'reduce' });
 		await serveSummary(page, summaryWith([run('gate', 1, 'failed'), run('gate', 2)], [run('smoke', 1, 'failed')]));
 		await page.goto('/quality');
 		await expect(overall(page)).toContainText('Production check failing');

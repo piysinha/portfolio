@@ -5,12 +5,13 @@ import { botTrapField, limits, topics } from '../lib/enquiry';
 import { owner, turnstileSiteKey } from '../lib/site';
 ---
 
-<BaseLayout title="Contact">
+<BaseLayout title="Contact" description="Send Piyush Sinha a message about a role, a freelance test automation project or anything else.">
 	<Fragment slot="hero">
 		<h1>Contact</h1>
 		<p class="lede">Hiring, a freelance project or something else? Send me a message.</p>
 	</Fragment>
 
+	<div class="grid gap-10 lg:grid-cols-[minmax(0,40rem)_minmax(0,1fr)] lg:gap-16">
 	<div class="contact">
 		<form class="enquiry-form" action="/api/enquiry" method="post" novalidate data-site-key={turnstileSiteKey}>
 			<div class="field">
@@ -54,15 +55,17 @@ import { owner, turnstileSiteKey } from '../lib/site';
 				<label for={botTrapField}>Leave this field empty</label>
 				<input id={botTrapField} name={botTrapField} tabindex="-1" autocomplete="off" />
 			</div>
+			<button class="btn btn-primary" type="submit">Send message</button>
+			{/* Below the button: the widget appears once the form is first focused, and above the button it would
+			    move the button between a press and its release, so the click would be lost. */}
 			<div class="turnstile" data-turnstile></div>
-			<button class="button button-primary" type="submit">Send message</button>
 		</form>
 		<div class="form-status" role="status" tabindex="-1" data-status></div>
 		<template id="sent">
 			<p class="sent-message">Thanks, <span data-name></span>. Your message has been sent.</p>
 			<p class="sent-links">
-				<a class="button button-primary" href="/projects">See my Projects</a>
-				<a class="button" href="/">Back to Home</a>
+				<a class="btn btn-primary" href="/projects">See my Projects</a>
+				<a class="btn btn-secondary" href="/">Back to Home</a>
 			</p>
 		</template>
 		<template id="send-failed">
@@ -77,6 +80,17 @@ import { owner, turnstileSiteKey } from '../lib/site';
 				> instead.
 			</p>
 		</noscript>
+	</div>
+	<aside class="self-start">
+		<h2 class="font-wide text-lg font-bold">Other ways to reach me</h2>
+		<ul class="mt-3 grid gap-2">
+			<li><ExternalLink class="link" href={owner.links.linkedin}>Message me on LinkedIn</ExternalLink></li>
+			<li><a class="link" href={owner.resume} download>Download my résumé</a></li>
+		</ul>
+		<p class="mt-6 max-w-sm text-[0.9375rem] text-ink-2">
+			Your message comes straight to my inbox. Your email address is used only to reply to you.
+		</p>
+	</aside>
 	</div>
 </BaseLayout>
 
@@ -191,79 +205,102 @@ import { owner, turnstileSiteKey } from '../lib/site';
 </script>
 
 <style>
-	.contact {
-		max-width: 40rem;
-	}
 	/* The form needs JavaScript (Turnstile); without it, the noscript note points to LinkedIn. */
 	:global(html:not(.js)) .enquiry-form {
 		display: none;
 	}
-	/* A plain panel, not a gradient tile, so axe can check the contrast of everything in it. */
 	.enquiry-form,
 	.form-status[data-state='sent'] {
-		padding: 1.5rem;
-		border: 1px solid var(--border);
+		padding: 1.5rem 1.25rem;
+		border: 1px solid var(--rule);
 		border-radius: 1.25rem;
 		background: var(--surface);
-		box-shadow: var(--shadow);
+	}
+	@media (min-width: 40rem) {
+		.enquiry-form,
+		.form-status[data-state='sent'] {
+			padding: 2rem;
+		}
 	}
 	.enquiry-form {
 		display: grid;
-		gap: 1.25rem;
+		gap: 1.5rem;
 	}
 	.enquiry-form[hidden] {
 		display: none;
 	}
 	.field {
 		display: grid;
-		gap: 0.4rem;
-		margin: 0;
-		padding: 0;
-		border: 0;
+		gap: 0.45rem;
 		min-width: 0;
 	}
 	label,
 	legend {
-		font-weight: 600;
+		font-weight: 650;
 	}
 	legend {
-		padding: 0;
-		margin-bottom: 0.4rem;
+		margin-bottom: 0.6rem;
 	}
 	input:not([type='radio']),
 	textarea {
 		width: 100%;
-		padding: 0.65rem 0.8rem;
-		border: 1px solid var(--border);
-		border-radius: 0.75rem;
-		background: var(--bg);
-		color: var(--text);
+		min-height: 2.875rem;
+		padding: 0.65rem 0.85rem;
+		border: 1.5px solid var(--rule);
+		border-radius: 0.625rem;
+		background: var(--paper);
+		color: var(--ink);
 		font: inherit;
+		transition: border-color 0.15s ease;
+	}
+	input:not([type='radio']):hover,
+	textarea:hover {
+		border-color: var(--ink-2);
+	}
+	input:not([type='radio']):focus-visible,
+	textarea:focus-visible {
+		border-color: var(--accent);
+		outline-offset: 0;
 	}
 	textarea {
 		resize: vertical;
 	}
 	[aria-invalid='true'] {
-		border-color: var(--danger);
+		border-color: var(--fail);
 	}
+	/* Topic choices are large, tappable chips; the radio stays visible inside each one. */
 	.choices {
 		display: flex;
 		flex-wrap: wrap;
-		gap: 0.5rem 1.25rem;
+		gap: 0.5rem;
 	}
 	.choice {
 		display: inline-flex;
 		align-items: center;
-		gap: 0.45rem;
-		font-weight: 400;
+		gap: 0.55rem;
+		min-height: 2.75rem;
+		padding: 0.45rem 0.9rem 0.45rem 0.75rem;
+		border: 1.5px solid var(--rule);
+		border-radius: 0.625rem;
+		font-weight: 500;
+		cursor: pointer;
+	}
+	.choice:hover {
+		border-color: var(--ink-2);
+	}
+	.choice:has(input:checked) {
+		border-color: var(--accent);
+		background: var(--accent-soft);
 	}
 	.choice input {
+		width: 1.05rem;
+		height: 1.05rem;
 		accent-color: var(--accent);
 	}
 	.field-error {
-		margin: 0;
-		color: var(--danger);
-		font-size: 0.9rem;
+		color: var(--fail);
+		font-size: 0.9375rem;
+		font-weight: 550;
 	}
 	.field-error:empty {
 		display: none;
@@ -282,6 +319,11 @@ import { owner, turnstileSiteKey } from '../lib/site';
 	.enquiry-form button {
 		justify-self: start;
 	}
+	@media (max-width: 39.999rem) {
+		.enquiry-form button {
+			justify-self: stretch;
+		}
+	}
 	.enquiry-form button:disabled {
 		cursor: progress;
 		opacity: 0.7;
@@ -296,14 +338,17 @@ import { owner, turnstileSiteKey } from '../lib/site';
 		margin: 0;
 	}
 	.form-status :global(.sent-message) {
-		margin: 0;
-		font-size: 1.15rem;
-		font-weight: 600;
+		font-size: 1.25rem;
+		font-weight: 700;
 	}
 	.form-status :global(.sent-links) {
 		display: flex;
 		flex-wrap: wrap;
 		gap: 0.75rem;
-		margin: 1.25rem 0 0;
+		margin-top: 1.25rem;
+	}
+	.form-status :global(a:not(.btn)) {
+		color: var(--accent);
+		text-decoration: underline;
 	}
 </style>
