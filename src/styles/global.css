@@ -25,6 +25,10 @@
 	--indigo: #818cf8;
 	--pass: #3fb950;
 
+	/* Status colours, reserved for pass/fail and always paired with an icon and a label. */
+	--status-good: #0ca30c;
+	--status-critical: #d03b3b;
+
 	--container: 72rem;
 	--header-h: 4.5rem;
 	--font-sans: 'Sora Variable', system-ui, -apple-system, 'Segoe UI', sans-serif;
