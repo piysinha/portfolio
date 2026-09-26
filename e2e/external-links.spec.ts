@@ -1,25 +1,10 @@
-import { expect, test, type Page } from '@playwright/test';
-import { collections } from './collections';
+import { expect, test } from '@playwright/test';
+import { collections, entryPaths } from './collections';
 import { sitePages } from './site-pages';
 
-async function entryPaths(page: Page) {
-	const paths: string[] = [];
-	for (const collection of collections) {
-		await page.goto(collection.path);
-		paths.push(
-			...(await page
-				.getByRole('main')
-				.getByRole('article')
-				.getByRole('heading')
-				.getByRole('link')
-				.evaluateAll((links) => links.map((link) => (link as HTMLAnchorElement).pathname))),
-		);
-	}
-	return paths;
-}
-
 test('every link to another website opens in a new tab, safely', async ({ page }) => {
-	const paths = [...sitePages.map((p) => p.path), ...(await entryPaths(page))];
+	const paths: string[] = sitePages.map((p) => p.path);
+	for (const collection of collections) paths.push(...(await entryPaths(page, collection.path)));
 	let externalCount = 0;
 
 	for (const path of paths) {

@@ -12,12 +12,20 @@ const externalLinks = {
 			if (!/^https?:\/\//.test(String(node.properties?.href ?? ''))) return;
 			ctx.setProperty(node, 'target', '_blank');
 			ctx.setProperty(node, 'rel', ['noopener', 'noreferrer']);
-			ctx.appendChild(node, {
-				type: 'element',
-				tagName: 'span',
-				properties: { className: ['sr-only'] },
-				children: [{ type: 'text', value: ' (opens in a new tab)' }],
-			});
+			ctx.appendChild(node, [
+				{
+					type: 'element',
+					tagName: 'span',
+					properties: { className: ['sr-only'] },
+					children: [{ type: 'text', value: ' (opens in a new tab)' }],
+				},
+				{
+					type: 'element',
+					tagName: 'span',
+					properties: { className: ['external-icon'], ariaHidden: 'true' },
+					children: [{ type: 'text', value: '↗' }],
+				},
+			]);
 		},
 	},
 };

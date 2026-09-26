@@ -1,3 +1,5 @@
+import { byNewest } from './dates';
+
 interface EntryData {
 	title: string;
 	tags: string[];
@@ -48,5 +50,5 @@ export function featuredWork(projects: ProjectLike[], caseStudies: CaseStudyLike
 				tags: caseStudy.data.tags,
 			})),
 	];
-	return items.sort((a, b) => b.date.getTime() - a.date.getTime());
+	return items.sort((a, b) => byNewest(a.date, b.date));
 }

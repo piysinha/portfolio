@@ -1,14 +1,14 @@
 ---
-// A terminal-style replay of this site's own tests. Titles are real test names from e2e/;
-// no counts or timings are shown, because only the Quality dashboard reads real results.
-// Every test runs in all four browser projects, so each label below is true.
+// A terminal-style replay of this site's own tests. Titles are real test names from e2e/, all of
+// which run (none are skipped) in every Playwright project, so each project label below is true.
+// No counts or timings are shown: only the Quality dashboard reads real results.
 const lines = [
 	['chromium', 'Visitor sees who owns the site on Home'],
 	['firefox', 'Visitor switches theme and the choice sticks across reloads and pages'],
-	['mobile', 'the Menu button is absent on wide screens'],
-	['webkit', 'Visitor downloads the résumé as a PDF'],
-	['chromium', 'every link to another website opens in a new tab, safely'],
-	['firefox', 'a Case study tells its Problem, Approach and Outcome'],
+	['mobile-chrome', 'Visitor downloads the résumé as a PDF'],
+	['webkit', 'every link to another website opens in a new tab, safely'],
+	['chromium', 'a Case study tells its Problem, Approach and Outcome'],
+	['mobile-chrome', 'a chosen theme applies before any deferred script runs, so there is no flash'],
 ];
 ---
 
@@ -26,16 +26,18 @@ const lines = [
 			))
 		}
 		<li class="run-summary" style={`--l:${lines.length}`}>
-			<strong>Gate run passed</strong> · promoted to production
+			<strong>Promoted to production</strong> only if every test passes
 		</li>
 	</ol>
 </figure>
 
 <style>
+	:global(.page-hero) .run.tile {
+		background: rgb(3 6 12 / 0.85);
+	}
 	.run {
 		margin: 0;
 		overflow: hidden;
-		background: rgb(3 6 12 / 0.85) !important;
 		font-family: var(--font-mono);
 		font-size: 0.78rem;
 	}

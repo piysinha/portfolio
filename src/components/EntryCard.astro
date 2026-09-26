@@ -1,4 +1,5 @@
 ---
+import type { FeaturedItem } from '../lib/featured';
 import EntryMeta from './EntryMeta.astro';
 
 interface Props {
@@ -8,7 +9,7 @@ interface Props {
 	date: Date;
 	tags: string[];
 	/** Shown above the title where Projects and Case studies are mixed. */
-	kind?: string;
+	kind?: FeaturedItem['kind'];
 	/** Heading level for the title, so cards nest under their section's heading. */
 	level?: 2 | 3;
 }
