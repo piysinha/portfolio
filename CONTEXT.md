@@ -17,7 +17,7 @@ A concrete thing Piyush built, usually with a public repository or live link.
 _Avoid_: Work item, portfolio piece
 
 **Case study**:
-A written account of a problem Piyush solved, with employer and client details anonymised. Employer work appears on the site only as Case studies.
+A written account of a problem Piyush solved, with employer and client details anonymised. Detailed accounts of employer work appear only as Case studies; headline career results may appear elsewhere, such as on Home.
 _Avoid_: Project write-up, story
 
 ### Quality

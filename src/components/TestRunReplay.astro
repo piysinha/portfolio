@@ -1,15 +1,7 @@
 ---
-// A terminal-style replay of this site's own tests. Titles are real test names from e2e/, all of
-// which run (none are skipped) in every Playwright project, so each project label below is true.
+// A terminal-style replay of this site's own tests (lines checked against e2e/ by a unit test).
 // No counts or timings are shown: only the Quality dashboard reads real results.
-const lines = [
-	['chromium', 'Visitor sees who owns the site on Home'],
-	['firefox', 'Visitor switches theme and the choice sticks across reloads and pages'],
-	['mobile-chrome', 'Visitor downloads the résumé as a PDF'],
-	['webkit', 'every link to another website opens in a new tab, safely'],
-	['chromium', 'a Case study tells its Problem, Approach and Outcome'],
-	['mobile-chrome', 'a chosen theme applies before any deferred script runs, so there is no flash'],
-];
+import { replayLines } from '../lib/test-run-replay';
 ---
 
 <figure class="tile run" aria-label="Replay of this site's own tests">
@@ -17,15 +9,15 @@ const lines = [
 	<p class="run-cmd"><span class="run-prompt">$</span> <span class="run-typed">npx playwright test</span></p>
 	<ol class="run-lines">
 		{
-			lines.map(([browser, name], i) => (
+			replayLines.map(({ project, title }, i) => (
 				<li style={`--l:${i}`}>
 					<span class="run-ok" aria-hidden="true">✓</span>
-					<span class="run-browser">[{browser}]</span>
-					<span class="run-name">{name}</span>
+					<span class="run-browser">[{project}]</span>
+					<span class="run-name">{title}</span>
 				</li>
 			))
 		}
-		<li class="run-summary" style={`--l:${lines.length}`}>
+		<li class="run-summary" style={`--l:${replayLines.length}`}>
 			<strong>Promoted to production</strong> only if every test passes
 		</li>
 	</ol>
