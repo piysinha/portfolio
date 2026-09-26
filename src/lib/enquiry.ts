@@ -15,7 +15,7 @@ export type EnquiryErrors = Partial<Record<keyof Enquiry, string>>;
 export type ParsedEnquiry = { ok: true; enquiry: Enquiry } | { ok: false; errors: EnquiryErrors };
 
 /** A form field hidden from people. Bots that fill it in are told their Enquiry was sent. */
-export const botTrapField = 'website';
+export const botTrapField = 'referral_code';
 
 /** Length limits, also used for the form's own attributes. */
 export const limits = { name: 100, email: 254, message: { min: 20, max: 5000 } } as const;

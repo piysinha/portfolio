@@ -2,15 +2,23 @@ import type { Page } from '@playwright/test';
 
 // A stand-in for Cloudflare's api.js: every widget passes at once with a new token (fake-token-1,
 // fake-token-2, …), and reset() issues the next one, as real tokens work only once.
-// Like the real script, it adds a cf-turnstile-response input and calls the ?onload= callback.
+// Like the real script, it takes up the real widget's size, adds a cf-turnstile-response input and
+// calls the ?onload= callback.
 const fakeApi = `(() => {
+	const sizes = {
+		normal: 'width: 300px; height: 65px',
+		flexible: 'width: 100%; min-width: 300px; height: 65px',
+		compact: 'width: 150px; height: 140px',
+	};
 	const widgets = {};
 	let issued = 0;
 	window.turnstile = {
 		render(container, options) {
 			const element = typeof container === 'string' ? document.querySelector(container) : container;
+			const widget = Object.assign(document.createElement('div'), { title: 'Fake Turnstile widget' });
+			widget.style.cssText = sizes[options.size ?? 'normal'];
 			const input = Object.assign(document.createElement('input'), { type: 'hidden', name: 'cf-turnstile-response' });
-			element.append(input);
+			element.append(widget, input);
 			const id = String(Object.keys(widgets).length + 1);
 			const pass = () => setTimeout(() => { input.value = 'fake-token-' + ++issued; options.callback?.(input.value); });
 			widgets[id] = { input, pass };

@@ -47,7 +47,7 @@ test('Visitor sends an Enquiry and sees it confirmed', async ({ page }) => {
 			email: 'ada@example.test',
 			topic: 'Hiring',
 			message,
-			website: '',
+			referral_code: '',
 			'cf-turnstile-response': 'fake-token-1',
 		},
 	]);
@@ -107,6 +107,18 @@ test('Turnstile loads only once the Visitor starts on the form', async ({ page }
 	await page.getByLabel('Name', { exact: true }).focus();
 
 	await expect.poll(() => loads.length).toBe(1);
+});
+
+test('the Turnstile widget fits a small phone without sideways scrolling', async ({ page }) => {
+	await page.setViewportSize({ width: 320, height: 640 });
+	await fakeTurnstile(page);
+	await page.goto('/contact');
+
+	await page.getByLabel('Name', { exact: true }).focus();
+	await expect(page.getByTitle('Fake Turnstile widget')).toBeVisible();
+
+	const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
+	expect(overflow).toBe(0);
 });
 
 for (const colorScheme of ['light', 'dark'] as const) {

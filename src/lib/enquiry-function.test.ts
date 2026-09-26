@@ -17,7 +17,7 @@ const visitorForm = (overrides: Record<string, string> = {}) => ({
 	email: 'ada@example.test',
 	topic: 'Hiring',
 	message: 'We are hiring an SDET and would like to talk.',
-	website: '',
+	referral_code: '',
 	'cf-turnstile-response': humanToken,
 	...overrides,
 });
@@ -96,7 +96,7 @@ describe('the Enquiry Function', () => {
 	it('treats a filled-in bot trap as sent, but sends nothing and calls no service', async () => {
 		const services = fakeServices();
 
-		const response = await handleEnquiry(post(visitorForm({ website: 'https://spam.example.test' })), env, services.fetch);
+		const response = await handleEnquiry(post(visitorForm({ referral_code: 'SPAM-2026' })), env, services.fetch);
 
 		expect(response.status).toBe(200);
 		expect(await response.json()).toEqual({ ok: true });

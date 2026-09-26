@@ -30,7 +30,7 @@ test('the Enquiry API treats a filled-in bot trap as sent', async ({ request }) 
 			email: 'bot@example.test',
 			topic: 'Something else',
 			message: 'Buy followers now at a very low price.',
-			website: 'https://spam.example.test',
+			referral_code: 'SPAM-2026',
 		},
 	});
 

@@ -95,13 +95,20 @@ import { owner, turnstileSiteKey } from '../lib/site';
 	let tokenWaiters: { resolve: () => void; reject: () => void }[] = [];
 	const settleWaiters = (outcome: 'resolve' | 'reject') => tokenWaiters.splice(0).forEach((waiter) => waiter[outcome]());
 
+	/** The flexible widget needs at least 300px, so narrower phones get the compact one. */
+	function widgetSize() {
+		const style = getComputedStyle(form);
+		const width = form.clientWidth - parseFloat(style.paddingLeft) - parseFloat(style.paddingRight);
+		return width >= 300 ? 'flexible' : 'compact';
+	}
+
 	function loadTurnstile() {
 		loading ??= new Promise<void>((resolve, reject) => {
 			page.onEnquiryTurnstileLoad = () => {
 				widgetId = page.turnstile!.render(form.querySelector<HTMLElement>('[data-turnstile]')!, {
 					sitekey: form.dataset.siteKey,
 					theme: document.documentElement.dataset.theme === 'dark' ? 'dark' : 'light',
-					size: 'flexible',
+					size: widgetSize(),
 					callback: () => settleWaiters('resolve'),
 					'error-callback': () => {
 						settleWaiters('reject');
