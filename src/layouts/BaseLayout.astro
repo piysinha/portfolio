@@ -3,7 +3,8 @@ import '@fontsource-variable/archivo/wdth.css';
 import '@fontsource-variable/jetbrains-mono';
 import ExternalLink from '../components/ExternalLink.astro';
 import Header from '../components/Header.astro';
-import { owner, pageTitle } from '../lib/site';
+import { productionHost } from '../lib/analytics';
+import { owner, pageTitle, previewImage } from '../lib/site';
 import '../styles/global.css';
 
 interface Props {
@@ -14,6 +15,8 @@ interface Props {
 }
 
 const { title, description = owner.description } = Astro.props;
+// Link previews need an absolute URL. It points at production even on a preview deploy, which is never shared.
+const previewImageUrl = new URL(previewImage.path, `https://${productionHost}`).href;
 ---
 
 <html lang="en">
@@ -27,6 +30,13 @@ const { title, description = owner.description } = Astro.props;
 		<meta property="og:title" content={pageTitle(title)} />
 		<meta property="og:description" content={description} />
 		<meta property="og:type" content="website" />
+		<meta property="og:image" content={previewImageUrl} />
+		<meta property="og:image:type" content="image/png" />
+		<meta property="og:image:width" content={String(previewImage.width)} />
+		<meta property="og:image:height" content={String(previewImage.height)} />
+		<meta property="og:image:alt" content={previewImage.alt} />
+		<meta name="twitter:card" content="summary_large_image" />
+		<meta name="twitter:image:alt" content={previewImage.alt} />
 		<script is:inline>
 			// Runs before first paint: mark JS support and apply the stored or system theme, so there is no flash.
 			document.documentElement.classList.add('js');
