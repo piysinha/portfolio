@@ -9,11 +9,10 @@ export const owner = {
 };
 
 /**
- * Turnstile's public site key for the contact form. It's baked into the pages at build time.
- * Until issue 08 sets the real one, this is Cloudflare's always-pass test key, whose dummy token
- * the Function's real secret rejects.
+ * Turnstile's public site key for the contact form's widget (hostname piyush-sinha-portfolio.pages.dev).
+ * It's baked into the pages at build time; the matching secret is a Production-only Cloudflare secret.
  */
-export const turnstileSiteKey = '1x00000000000000000000AA';
+export const turnstileSiteKey = '0x4AAAAAAFEJL2Zuds-Q_zXX';
 
 /** The reports site (ADR-0002): every Test run's report, and summary.json for the Quality dashboard. */
 export const reports = {
