@@ -1,10 +1,430 @@
 ---
+import ExternalLink from '../components/ExternalLink.astro';
 import BaseLayout from '../layouts/BaseLayout.astro';
+import { reports } from '../lib/site';
+
+const kinds = [
+	{ kind: 'gate', name: 'Gate run', what: 'Every change is tested on a preview deploy, in three browsers and a phone, before it can be released.' },
+	{ kind: 'smoke', name: 'Smoke run', what: 'After each release, a shorter suite checks the live site.' },
+] as const;
 ---
 
 <BaseLayout title="Quality dashboard">
 	<Fragment slot="hero">
+		<p class="eyebrow">Quality</p>
 		<h1>Quality dashboard</h1>
-		<p class="lede">Coming soon.</p>
+		<p class="lede">
+			Every release of this site is tested before it goes live. These are the real results, loaded from the reports
+			site.
+		</p>
+		<p class="overall" role="status" data-state="loading">Loading the latest results…</p>
+		<noscript><p class="overall">See the results on the <ExternalLink href={reports.site}>reports site</ExternalLink>.</p></noscript>
 	</Fragment>
+
+	<div class="cards">
+		{
+			kinds.map(({ kind, name, what }) => (
+				<section class="tile run-card" aria-labelledby={`${kind}-heading`}>
+					<h2 id={`${kind}-heading`}>{name}</h2>
+					<p class="run-what">{what}</p>
+					<div class="run-body" data-card={kind}>
+						<p class="muted">Loading…</p>
+					</div>
+				</section>
+			))
+		}
+	</div>
+
+	<section class="history" aria-labelledby="history-heading">
+		<h2 id="history-heading">Last 30 runs</h2>
+		{
+			kinds.map(({ kind, name }) => (
+				<section class="trend" aria-labelledby={`${kind}-trend-heading`}>
+					<div class="trend-head">
+						<h3 id={`${kind}-trend-heading`}>{name} history</h3>
+						<p class="trend-summary" data-trend-summary={kind} />
+					</div>
+					<ol class="bars" data-trend={kind} />
+				</section>
+			))
+		}
+		<p class="legend">
+			<span class="legend-item"><span class="swatch passed" aria-hidden="true" />Passed</span>
+			<span class="legend-item"><span class="swatch failed" aria-hidden="true" />Failed</span>
+			<span>Older runs on the left. Select a bar to open its report.</span>
+		</p>
+		<div class="tooltip" id="trend-tooltip" role="tooltip" hidden></div>
+		<details class="table-view">
+			<summary>Show every run as a table</summary>
+			<div class="table-scroll">
+				<table>
+					<thead>
+						<tr><th scope="col">Run</th><th scope="col">Started (UTC)</th><th scope="col">Result</th><th scope="col">Passed</th><th scope="col">Failed</th><th scope="col">Flaky</th><th scope="col">Report</th></tr>
+					</thead>
+					<tbody data-table />
+				</table>
+			</div>
+		</details>
+	</section>
+
+	<p class="source">
+		Data: <ExternalLink href={reports.summaryUrl}>summary.json</ExternalLink> on the <ExternalLink href={reports.site}>reports site</ExternalLink>.
+	</p>
 </BaseLayout>
+
+<script>
+	import { dashboardView, type DashboardView, type RunCard, type TableRow } from '../lib/quality-dashboard';
+	import { reports } from '../lib/site';
+	import type { RunKind } from '../lib/test-runs';
+
+	function el<K extends keyof HTMLElementTagNameMap>(tag: K, props: Partial<HTMLElementTagNameMap[K]> = {}, ...children: (Node | string)[]) {
+		const node = Object.assign(document.createElement(tag), props);
+		node.append(...children);
+		return node;
+	}
+
+	/** A link to another website, matching ExternalLink.astro. */
+	function externalLink(href: string, text: string, className = '') {
+		const link = el('a', { href, target: '_blank', rel: 'noopener noreferrer', className: `external-link ${className}`.trim() }, text);
+		link.append(el('span', { className: 'sr-only' }, ' (opens in a new tab)'), el('span', { className: 'external-icon', ariaHidden: 'true' }, '↗'));
+		return link;
+	}
+
+	function statusChip(status: RunCard['status']) {
+		return el(
+			'span',
+			{ className: `chip ${status}` },
+			el('span', { className: 'chip-icon', ariaHidden: 'true' }, status === 'passed' ? '✓' : '✗'),
+			status === 'passed' ? 'Passed' : 'Failed',
+		);
+	}
+
+	function renderCard(kind: RunKind, run: RunCard | undefined) {
+		const body = document.querySelector<HTMLElement>(`[data-card="${kind}"]`);
+		if (!body) return;
+		if (!run) {
+			body.replaceChildren(el('p', { className: 'muted' }, 'No runs yet.'));
+			return;
+		}
+		const time = el('time', { dateTime: run.startedAt, title: run.startedAt }, run.when);
+		const { passed, failed, flaky, skipped } = run.counts;
+		body.replaceChildren(
+			el('p', { className: 'run-status' }, statusChip(run.status), time),
+			el('p', { className: 'counts' }, `${passed} passed · ${failed} failed · ${flaky} flaky · ${skipped} skipped`),
+			el('p', { className: 'muted' }, `Took ${run.duration} · commit `, externalLink(run.commitUrl, run.commit)),
+			el('ul', { className: 'tags', ariaLabel: 'Browsers' }, ...run.projects.map((project) => el('li', {}, project))),
+			el('p', { className: 'run-links' }, externalLink(run.reportUrl, 'Open report', 'button button-primary'), externalLink(run.runUrl, 'GitHub run', 'button')),
+		);
+	}
+
+	function renderTrend(kind: RunKind, trend: DashboardView['trend'][RunKind]) {
+		const summary = document.querySelector(`[data-trend-summary="${kind}"]`);
+		const bars = document.querySelector(`[data-trend="${kind}"]`);
+		if (summary) summary.textContent = trend.points.length ? trend.passedLabel : 'No runs yet.';
+		bars?.replaceChildren(
+			...trend.points.map((point) =>
+				el('li', {}, el('a', { className: `bar ${point.status}`, href: point.reportUrl, target: '_blank', rel: 'noopener noreferrer', ariaLabel: `${point.label} (opens in a new tab)` })),
+			),
+		);
+		bars?.querySelectorAll<HTMLAnchorElement>('.bar').forEach((bar, i) => {
+			bar.dataset.label = trend.points[i].label;
+		});
+	}
+
+	function renderTable(rows: TableRow[]) {
+		document.querySelector('[data-table]')?.replaceChildren(
+			...rows.map((row) =>
+				el(
+					'tr',
+					{},
+					el('td', {}, row.kind),
+					el('td', {}, row.startedAt.slice(0, 16).replace('T', ' ')),
+					el('td', {}, statusChip(row.status)),
+					el('td', {}, String(row.counts.passed)),
+					el('td', {}, String(row.counts.failed)),
+					el('td', {}, String(row.counts.flaky)),
+					el('td', {}, externalLink(row.reportUrl, 'Open')),
+				),
+			),
+		);
+	}
+
+	function renderOverall(view: DashboardView | undefined) {
+		const status = document.querySelector<HTMLElement>('.overall[role="status"]');
+		if (!status) return;
+		const smoke = view?.latest.smoke;
+		const gate = view?.latest.gate;
+		const messages: Record<string, [string, string]> = {
+			healthy: ['All checks passing.', ` The live site passed its latest Smoke run ${smoke?.when ?? ''}.`],
+			'production-failing': ['Production check failing.', ` The latest Smoke run on the live site failed ${smoke?.when ?? ''}.`],
+			'release-blocked': ['Latest release blocked.', ` The Gate run caught a problem ${gate?.when ?? ''}, so the live site is still on the last build that passed.`],
+		};
+		const state = view && view.overall !== 'no-data' ? view.overall : 'unavailable';
+		status.dataset.state = state;
+		if (state === 'unavailable') {
+			status.replaceChildren(el('strong', {}, "Couldn't load the latest results."), ' The reports site may be briefly unavailable. See every run on the ', externalLink(reports.site, 'reports site'), '.');
+			return;
+		}
+		const [headline, detail] = messages[state];
+		status.replaceChildren(el('strong', {}, headline), detail);
+	}
+
+	/** One tooltip for every trend bar: shown on hover and keyboard focus, dismissed with Escape. */
+	function wireTooltip() {
+		const tooltip = document.getElementById('trend-tooltip');
+		if (!tooltip) return;
+		const show = (bar: HTMLElement) => {
+			tooltip.textContent = bar.dataset.label ?? '';
+			tooltip.hidden = false;
+			const box = bar.getBoundingClientRect();
+			const width = tooltip.offsetWidth;
+			const left = Math.min(Math.max(8, box.left + box.width / 2 - width / 2), document.documentElement.clientWidth - width - 8);
+			tooltip.style.left = `${left + scrollX}px`;
+			tooltip.style.top = `${box.top + scrollY - tooltip.offsetHeight - 8}px`;
+		};
+		const hide = () => (tooltip.hidden = true);
+		document.querySelectorAll<HTMLElement>('.bar').forEach((bar) => {
+			bar.addEventListener('pointerenter', () => show(bar));
+			bar.addEventListener('focus', () => show(bar));
+			bar.addEventListener('pointerleave', hide);
+			bar.addEventListener('blur', hide);
+		});
+		document.addEventListener('keydown', (event) => event.key === 'Escape' && hide());
+	}
+
+	async function load() {
+		let view: DashboardView | undefined;
+		try {
+			const response = await fetch(reports.summaryUrl, { cache: 'no-store' });
+			if (response.ok) view = dashboardView(await response.json(), new Date());
+		} catch {
+			view = undefined;
+		}
+		renderOverall(view);
+		const kinds: RunKind[] = ['gate', 'smoke'];
+		for (const kind of kinds) {
+			renderCard(kind, view?.latest[kind]);
+			renderTrend(kind, view?.trend[kind] ?? { points: [], passedLabel: '' });
+		}
+		renderTable(view?.table ?? []);
+		wireTooltip();
+	}
+
+	load();
+</script>
+
+<style>
+	.overall {
+		max-width: 46rem;
+		margin: 1.25rem 0 0;
+		padding: 0.75rem 1rem;
+		border: 1px solid var(--ink-line);
+		border-left: 4px solid var(--ink-muted);
+		border-radius: 0.75rem;
+		background: var(--ink-glass);
+		color: var(--ink-fg);
+	}
+	.overall[data-state='healthy'] {
+		border-left-color: var(--status-good);
+	}
+	.overall[data-state='production-failing'],
+	.overall[data-state='release-blocked'] {
+		border-left-color: var(--status-critical);
+	}
+	.overall :global(strong) {
+		color: var(--ink-strong);
+	}
+	.cards {
+		display: grid;
+		gap: 1rem;
+	}
+	@media (min-width: 48rem) {
+		.cards {
+			grid-template-columns: repeat(2, 1fr);
+		}
+	}
+	.run-card {
+		display: grid;
+		align-content: start;
+		gap: 0.5rem;
+		padding: 1.5rem;
+	}
+	.run-card h2 {
+		margin: 0;
+		font-size: 1.35rem;
+	}
+	.run-what,
+	.muted {
+		margin: 0;
+		color: var(--muted);
+		font-size: 0.9rem;
+	}
+	.run-body {
+		display: grid;
+		gap: 0.6rem;
+		margin-top: 0.5rem;
+	}
+	.run-body :global(p) {
+		margin: 0;
+	}
+	.run-body :global(.run-status) {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: center;
+		gap: 0.75rem;
+		color: var(--muted);
+	}
+	.run-body :global(.counts) {
+		font-family: var(--font-mono);
+		font-size: 0.9rem;
+		font-variant-numeric: tabular-nums;
+	}
+	.run-body :global(.run-links) {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 0.6rem;
+		margin-top: 0.25rem;
+	}
+	:global(.chip) {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.4rem;
+		padding: 0.15rem 0.7rem;
+		border: 1px solid var(--border);
+		border-radius: 999px;
+		color: var(--text);
+		font-weight: 600;
+		font-size: 0.85rem;
+	}
+	:global(.chip-icon) {
+		display: inline-grid;
+		place-items: center;
+		width: 1.1rem;
+		height: 1.1rem;
+		border-radius: 50%;
+		color: #fff;
+		font-size: 0.7rem;
+	}
+	:global(.chip.passed .chip-icon) {
+		background: var(--status-good);
+	}
+	:global(.chip.failed .chip-icon) {
+		background: var(--status-critical);
+	}
+	.history {
+		display: grid;
+		gap: 1.25rem;
+		margin-top: 2.5rem;
+	}
+	.history > h2 {
+		margin: 0;
+		font-size: 1.35rem;
+	}
+	.trend-head {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: baseline;
+		justify-content: space-between;
+		gap: 0.25rem 1rem;
+	}
+	.trend h3 {
+		margin: 0;
+		font-size: 1rem;
+	}
+	.trend-summary {
+		margin: 0;
+		color: var(--muted);
+		font-family: var(--font-mono);
+		font-size: 0.85rem;
+	}
+	.bars {
+		display: flex;
+		gap: 2px;
+		height: 2.75rem;
+		margin: 0.5rem 0 0;
+		padding: 0;
+		list-style: none;
+	}
+	.bars :global(li) {
+		flex: 0 1 1.5rem;
+		min-width: 0.4rem;
+	}
+	.bars :global(.bar) {
+		display: block;
+		height: 100%;
+		border-radius: 4px;
+		transition: transform 0.15s ease;
+	}
+	.bars :global(.bar:hover),
+	.bars :global(.bar:focus-visible) {
+		transform: scaleY(1.08);
+	}
+	:global(.bar.passed),
+	.swatch.passed {
+		background: var(--status-good);
+	}
+	/* Failed runs carry a texture as well as colour, so pass/fail never depends on hue alone. */
+	:global(.bar.failed),
+	.swatch.failed {
+		background: repeating-linear-gradient(45deg, var(--status-critical) 0 3px, color-mix(in srgb, var(--status-critical) 55%, var(--surface)) 3px 6px);
+	}
+	.legend {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 0.5rem 1.25rem;
+		margin: 0;
+		color: var(--muted);
+		font-size: 0.85rem;
+	}
+	.legend-item {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.4rem;
+		color: var(--text);
+	}
+	.swatch {
+		width: 0.9rem;
+		height: 0.9rem;
+		border-radius: 3px;
+	}
+	.tooltip {
+		position: absolute;
+		z-index: 10;
+		max-width: min(22rem, calc(100vw - 16px));
+		padding: 0.4rem 0.65rem;
+		border: 1px solid var(--border);
+		border-radius: 0.5rem;
+		background: var(--surface);
+		box-shadow: var(--shadow);
+		color: var(--text);
+		font-size: 0.8rem;
+		pointer-events: none;
+	}
+	.table-view summary {
+		cursor: pointer;
+		color: var(--accent);
+		font-weight: 600;
+	}
+	.table-scroll {
+		margin-top: 0.75rem;
+		overflow-x: auto;
+	}
+	table {
+		width: 100%;
+		border-collapse: collapse;
+		font-size: 0.85rem;
+		font-variant-numeric: tabular-nums;
+	}
+	th,
+	td {
+		padding: 0.45rem 0.6rem;
+		border-bottom: 1px solid var(--border);
+		text-align: left;
+		white-space: nowrap;
+	}
+	.source {
+		margin-top: 2rem;
+		color: var(--muted);
+		font-size: 0.85rem;
+	}
+</style>

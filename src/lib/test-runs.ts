@@ -26,9 +26,14 @@ export const runSummarySchema = z.object({
 export type RunSummary = z.infer<typeof runSummarySchema>;
 export type RunKind = RunSummary['kind'];
 
+interface JsonSuite {
+	specs: { tests: { projectName: string }[] }[];
+	suites?: JsonSuite[];
+}
+
 /** The parts of Playwright's JSON reporter output that a summary needs. */
 export interface PlaywrightJsonReport {
-	config: { projects: { name: string }[] };
+	suites: JsonSuite[];
 	errors: unknown[];
 	stats: { startTime: string; duration: number; expected: number; unexpected: number; flaky: number; skipped: number };
 }
@@ -63,8 +68,16 @@ export function summariseRun(reports: PlaywrightJsonReport[], meta: RunMeta): Ru
 		startedAt: starts[0] ?? new Date().toISOString(),
 		durationMs: Math.max(0, ...reports.map((report) => Math.round(report.stats.duration))),
 		counts,
-		projects: [...new Set(reports.flatMap((report) => report.config.projects.map((project) => project.name)))],
+		projects: [...new Set(reports.flatMap((report) => projectsThatRan(report.suites)))],
 	};
+}
+
+/** Projects with tests in the report. Configured projects filtered out with --project have none. */
+function projectsThatRan(suites: JsonSuite[]): string[] {
+	return suites.flatMap((suite) => [
+		...suite.specs.flatMap((spec) => spec.tests.map((test) => test.projectName)),
+		...projectsThatRan(suite.suites ?? []),
+	]);
 }
 
 /** How many runs of each kind the history keeps. Older runs' reports are deleted. */

@@ -8,6 +8,12 @@ export const owner = {
 	resume: '/piyush-sinha-resume.pdf',
 };
 
+/** The reports site (ADR-0002): every Test run's report, and summary.json for the Quality dashboard. */
+export const reports = {
+	site: 'https://piyush-sinha-test-reports.pages.dev/',
+	summaryUrl: 'https://piyush-sinha-test-reports.pages.dev/summary.json',
+};
+
 export const sections = [
 	{ name: 'Home', path: '/' },
 	{ name: 'Projects', path: '/projects' },

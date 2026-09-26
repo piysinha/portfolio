@@ -1,8 +1,14 @@
 import { describe, expect, it } from 'vitest';
 import { recordRun, summariseRun, summarySchema, type RunSummary } from './test-runs';
 
+/** A suite tree holding one test per project, the way Playwright nests them in its JSON report. */
+const ranIn = (...projects: string[]) => [
+	{ specs: [], suites: [{ specs: [{ tests: projects.map((projectName) => ({ projectName, status: 'expected' })) }] }] },
+];
+
 const report = (stats: Partial<Record<'expected' | 'unexpected' | 'flaky' | 'skipped', number>>, extra = {}) => ({
 	config: { projects: [{ name: 'chromium' }, { name: 'firefox' }] },
+	suites: ranIn('chromium', 'firefox'),
 	errors: [],
 	stats: { startTime: '2026-09-26T10:00:00.000Z', duration: 60_000, expected: 0, unexpected: 0, flaky: 0, skipped: 0, ...stats },
 	...extra,
@@ -36,6 +42,7 @@ describe('summariseRun', () => {
 			{ expected: 8 },
 			{
 				config: { projects: [{ name: 'chromium' }, { name: 'webkit' }] },
+				suites: ranIn('chromium', 'webkit'),
 				stats: { startTime: '2026-09-26T10:02:00.000Z', duration: 90_000, expected: 8, unexpected: 0, flaky: 0, skipped: 0 },
 			},
 		);
@@ -46,6 +53,18 @@ describe('summariseRun', () => {
 		expect(run.startedAt).toBe('2026-09-26T10:00:00.000Z');
 		expect(run.durationMs).toBe(90_000);
 		expect(run.projects).toEqual(['chromium', 'firefox', 'webkit']);
+	});
+
+	it('lists only the browser projects whose tests ran, not every configured project', () => {
+		const smoke = report(
+			{ expected: 34 },
+			{
+				config: { projects: ['chromium', 'firefox', 'webkit', 'mobile-chrome'].map((name) => ({ name })) },
+				suites: ranIn('chromium', 'mobile-chrome'),
+			},
+		);
+
+		expect(summariseRun([smoke], meta).projects).toEqual(['chromium', 'mobile-chrome']);
 	});
 
 	it('marks the run failed when any test failed', () => {
