@@ -46,8 +46,6 @@ import { replayLines } from '../lib/test-run-replay';
 </figure>
 
 <script>
-	import { dashboardView } from '../lib/quality-dashboard';
-	import { releaseCheck } from '../lib/release-check';
 	import { reports } from '../lib/site';
 
 	// The first replay plays from CSS on load. After that it loops, but only while the terminal is on
@@ -110,6 +108,12 @@ import { replayLines } from '../lib/test-run-replay';
 		try {
 			const response = await fetch(reports.summaryUrl, { cache: 'no-store' });
 			if (!response.ok) return;
+			// Validating the summary pulls in a schema library (~85 KB), so it loads only once there are
+			// results to show, and never delays the first paint.
+			const [{ dashboardView }, { releaseCheck }] = await Promise.all([
+				import('../lib/quality-dashboard'),
+				import('../lib/release-check'),
+			]);
 			const check = releaseCheck(dashboardView(await response.json(), new Date()));
 			summary.dataset.state = check.state;
 			summary.querySelector('[data-result]')!.textContent = check.result;
