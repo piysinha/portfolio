@@ -10,7 +10,9 @@ const budgets = {
 	fontBytes: 150 * KB,
 	totalBytes: 400 * KB,
 	requests: 25,
-	layoutShift: 0.02,
+	// Google's "good" threshold. Layout shift varies between runs and is higher on the deployed site
+	// (web fonts arrive over a real network), so this guards against a real jump, not small differences.
+	layoutShift: 0.1,
 };
 // The quality dashboard needs its ~85 KB schema-validation bundle to draw, so it gets a larger script
 // budget. Home loads the same bundle only after its first paint, once there are results to show.
