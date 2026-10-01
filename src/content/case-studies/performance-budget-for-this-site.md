@@ -2,8 +2,8 @@
 title: Putting a performance budget on this portfolio
 problem: This site was already small, but nothing stopped it from getting heavier, and I had never measured it. When I did, Home was downloading an 85 KB script that only the Quality dashboard needed.
 approach: I wrote a Playwright test that measures what each page downloads and how much its layout shifts, set budgets from the measured numbers, then moved the dashboard's validation code so it loads only after Home has painted.
-outcome: Home's scripts at load went from 88 KB to 4 KB and its total download from 291 KB to 196 KB. Every page now has a budget that fails the build if it grows.
-highlight: "Home scripts at load: 88 KB → 4 KB"
+outcome: Home's scripts at load went from 88 KB to 4 KB, its total download from 291 KB to 196 KB, and its largest paint on a throttled connection from 1.39 s to 1.20 s. Every page now has a budget that fails the build if it grows.
+highlight: "Home largest paint: 1.39 s → 1.20 s"
 tags: [Playwright, TypeScript, Astro, Performance]
 date: 2026-10-02
 featured: false
@@ -28,7 +28,9 @@ I measured before changing anything, so I would not be guessing. The site has no
 
 - Home scripts at load: **88 KB → 4 KB**.
 - Home total download: **291 KB → 196 KB**, in 8 requests instead of 10.
+- Largest paint on Home: **1.39 s → 1.20 s** (about 14% faster), and the load event **1.61 s → 1.42 s**, on a throttled slow-4G connection with the CPU slowed 4×. Each figure is the median of 20 loads, and a repeat run gave the same result.
+- First paint did not change (about 0.64 s both times). The saving is in the page finishing, not starting.
 - Layout shift: **under 0.01 on every page**, against a budget of 0.02.
 - The other pages did not change, and they now have budgets as well.
 
-These are download sizes measured against a local server, not load times on a real network, so I am not claiming a specific time saving. The more lasting result is the test: the next time something heavy slips in, the build fails and says which page and which number.
+The timings come from a simulated connection against a local server, so real visitors will see different absolute numbers. The more lasting result is the test: the next time something heavy slips in, the build fails and says which page and which number.
