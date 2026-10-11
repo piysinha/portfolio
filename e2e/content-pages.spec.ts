@@ -1,6 +1,7 @@
 import AxeBuilder from '@axe-core/playwright';
 import { expect, test, type Page } from '@playwright/test';
 import { collections, entryPaths } from './collections';
+import { expectBorderToLightUp } from './lit-border';
 
 const entries = (page: Page) => page.getByRole('main').getByRole('article');
 
@@ -151,4 +152,11 @@ test('Projects are labelled with the test that checks their grouping', async ({ 
 	await expect(page.getByRole('main').getByTestId('test-label')).toHaveText(
 		/content-pages\.spec\.ts.*Projects are grouped by area, test automation first/,
 	);
+});
+
+test('a Case study page lights up its headline panel under the pointer, or on scroll on a phone', async ({ page, isMobile }) => {
+	const [path] = await entryPaths(page, '/case-studies');
+	await page.goto(path);
+
+	await expectBorderToLightUp(page.getByRole('complementary').locator('[data-spotlight]'), isMobile);
 });

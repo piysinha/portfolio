@@ -35,7 +35,7 @@ const kinds = [
 						<Fragment>
 							{i === 1 && (
 								<li class="step">
-									<section class="tile promotion" aria-labelledby="promotion-heading">
+									<section class="tile promotion" aria-labelledby="promotion-heading" data-spotlight data-lit>
 										<span class="promotion-mark" aria-hidden="true" />
 										<h3 id="promotion-heading">Promotion</h3>
 										<p class="run-what">Only a Gate run that passes promotes its deploy to the live site.</p>
@@ -44,7 +44,7 @@ const kinds = [
 								</li>
 							)}
 							<li class="step">
-								<section class="tile run-card" aria-labelledby={`${kind}-heading`}>
+								<section class="tile run-card" aria-labelledby={`${kind}-heading`} data-spotlight data-lit>
 									<h3 id={`${kind}-heading`}>{name}</h3>
 									<p class="run-what">{what}</p>
 									<div class="run-body" data-card={kind}>
@@ -364,7 +364,8 @@ const kinds = [
 		transform-style: preserve-3d;
 	}
 	.tile {
-		/* A tile's edge: the accent until it shows a real result. */
+		/* A tile's edge: the accent until it shows a real result. Its lit border (data-lit) is always the
+		   accent, never a result's green or red. */
 		--edge: var(--accent);
 		position: relative;
 		display: grid;
@@ -506,8 +507,11 @@ const kinds = [
 				transform 0.4s cubic-bezier(0.2, 0.8, 0.2, 1),
 				box-shadow 0.4s ease;
 		}
+		/* A tile lifts towards the Visitor under the pointer or, on a touch screen, as the middle of the
+		   screen crosses it (.is-lit). */
 		.tile:hover,
-		.tile:focus-within {
+		.tile:focus-within,
+		.tile.is-lit {
 			transform: translateZ(44px);
 		}
 		/* Once promoted, a light travels along the rail towards the live site. The pseudo-element is as

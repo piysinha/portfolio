@@ -40,7 +40,7 @@ const { Content } = await render(caseStudy);
 			</article>
 		</div>
 		<aside class="self-start lg:sticky lg:top-24">
-			<div class="panel p-6" data-spotlight>
+			<div class="panel p-6" data-spotlight data-lit>
 				{
 					caseStudy.data.highlight && (
 						<div class="mb-5 border-b border-rule pb-5">
@@ -70,8 +70,9 @@ const { Content } = await render(caseStudy);
 
 <style>
 	/* The aside stands off the page: a raised surface with a violet glow under it, and a border that
-	   lights up where the pointer is (data-spotlight sets --mx and --my). It never tilts: it is sticky. */
+	   lights up (data-lit), from its top edge until the pointer moves. It never tilts: it is sticky. */
 	.panel {
+		--lit-y: 0%;
 		position: relative;
 		border: 1px solid var(--rule);
 		border-radius: 1rem;
@@ -79,29 +80,7 @@ const { Content } = await render(caseStudy);
 		background: var(--surface);
 		box-shadow:
 			inset 0 1px 0 color-mix(in srgb, var(--accent) 22%, transparent),
-			0 30px 60px -40px color-mix(in srgb, var(--glow) 70%, transparent);
-	}
-	.panel::after {
-		content: '';
-		position: absolute;
-		inset: -1px;
-		padding: 1.5px;
-		border-radius: inherit;
-		background: radial-gradient(16rem circle at var(--mx, 50%) var(--my, 0%), var(--accent), transparent 65%);
-		-webkit-mask:
-			linear-gradient(#000 0 0) content-box,
-			linear-gradient(#000 0 0);
-		-webkit-mask-composite: xor;
-		mask:
-			linear-gradient(#000 0 0) content-box exclude,
-			linear-gradient(#000 0 0);
-		opacity: 0;
-		transition: opacity 0.3s ease;
-		pointer-events: none;
-	}
-	.panel:hover::after,
-	.panel:focus-within::after {
-		opacity: 1;
+			var(--glow-shadow);
 	}
 	/* A headline result gets the accent tick that cards use; green is kept for real test results. */
 	.headline {

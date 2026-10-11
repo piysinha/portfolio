@@ -1,5 +1,6 @@
 import AxeBuilder from '@axe-core/playwright';
 import { expect, test, type Page } from '@playwright/test';
+import { expectBorderToLightUp } from './lit-border';
 import { run, serveSummary, summaryWith } from './summary';
 
 const overall = (page: Page) => page.getByRole('status');
@@ -139,6 +140,38 @@ test('promotion says there is nothing to promote before the first Gate run', asy
 
 	await expect(promotion(page)).toContainText('No Gate run yet');
 	await expect(promotion(page)).not.toHaveAttribute('data-promoted');
+});
+
+test('the Release tiles light up under the pointer, or on scroll on a phone, in the accent colour', async ({ page, isMobile }) => {
+	await serveSummary(page, summaryWith([run('gate', 2)], [run('smoke', 1)]));
+	await page.goto('/quality');
+	await expect(card(page, 'Smoke run')).toContainText('34 passed');
+
+	for (const tile of [card(page, 'Gate run'), promotion(page), card(page, 'Smoke run')]) {
+		await expectBorderToLightUp(tile, isMobile);
+		// The lit border is the accent, never the green or red of a result.
+		const [lit, accent] = await tile.evaluate((element) => {
+			const probe = element.appendChild(document.createElement('span'));
+			probe.style.color = 'var(--accent)';
+			const colours = [getComputedStyle(element, '::after').backgroundImage, getComputedStyle(probe).color];
+			probe.remove();
+			return colours;
+		});
+		expect(lit).toContain(accent);
+	}
+});
+
+test('a Release tile lifts as it scrolls to the middle of a phone screen', async ({ page, isMobile }) => {
+	test.skip(!isMobile, 'On desktop the tile lifts under the pointer');
+	await serveSummary(page, summaryWith([run('gate', 2)], [run('smoke', 1)]));
+	await page.goto('/quality');
+	const gate = card(page, 'Gate run');
+	const resting = await gate.evaluate((element) => getComputedStyle(element).transform);
+
+	await gate.evaluate((element) => element.scrollIntoView({ block: 'center' }));
+
+	await expect(gate).toHaveClass(/\bis-lit\b/);
+	await expect.poll(() => gate.evaluate((element) => getComputedStyle(element).transform)).not.toBe(resting);
 });
 
 test('the latest Release is labelled with the test that checks it', async ({ page }) => {

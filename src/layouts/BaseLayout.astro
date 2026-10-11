@@ -159,7 +159,9 @@ const previewImageUrl = new URL(previewImage.path, `https://${productionHost}`).
 
 			// Elements marked data-tilt lean towards the pointer, up to data-tilt degrees. Touch screens have
 			// no pointer, so there they lean as they scroll past the middle of the screen, and light up there.
+			// Lit borders that don't tilt (data-lit) light up while the middle of the screen is on them.
 			const tilters = [...document.querySelectorAll<HTMLElement>('[data-tilt]')];
+			const stillLit = [...document.querySelectorAll<HTMLElement>('[data-lit]:not([data-tilt])')];
 			if (!reduce && !matchMedia('(hover: none)').matches) {
 				for (const element of tilters) {
 					const max = Number(element.dataset.tilt);
@@ -174,7 +176,7 @@ const previewImageUrl = new URL(previewImage.path, `https://${productionHost}`).
 						element.style.removeProperty('--ry');
 					});
 				}
-			} else if (!reduce && tilters.length > 0) {
+			} else if (!reduce && tilters.length + stillLit.length > 0) {
 				let queued = false;
 				const lean = () => {
 					queued = false;
@@ -185,6 +187,15 @@ const previewImageUrl = new URL(previewImage.path, `https://${productionHost}`).
 						element.style.setProperty('--rx', `${-t * Number(element.dataset.tilt)}deg`);
 						element.style.setProperty('--my', `${50 + t * 50}%`);
 						element.classList.toggle('is-lit', Math.abs(t) < 0.35);
+					}
+					for (const element of stillLit) {
+						// Left alone while the Visitor is in it (it is lit anyway), so nothing repaints as they type.
+						if (element.matches(':focus-within')) continue;
+						const box = element.getBoundingClientRect();
+						// Where the middle of the screen crosses it: 0 at its top edge, 1 at its bottom edge.
+						const at = (innerHeight / 2 - box.top) / box.height;
+						element.style.setProperty('--my', `${Math.max(0, Math.min(1, at)) * 100}%`);
+						element.classList.toggle('is-lit', at >= 0 && at <= 1);
 					}
 				};
 				addEventListener(
