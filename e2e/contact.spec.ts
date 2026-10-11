@@ -102,6 +102,14 @@ test("a failed send keeps the Visitor's message, offers LinkedIn, and can be ret
 	]);
 });
 
+test('the form is labelled with the test that checks it', async ({ page }) => {
+	await page.goto('/contact');
+
+	const label = page.getByRole('main').getByTestId('test-label');
+	await expect(label).toHaveCount(1);
+	await expect(label).toHaveText(/contact\.spec\.ts.*Visitor sends an Enquiry and sees it confirmed/);
+});
+
 test('Turnstile loads only once the Visitor starts on the form', async ({ page }) => {
 	const loads = await fakeTurnstile(page);
 	await page.goto('/contact');
@@ -169,5 +177,6 @@ test.describe('without JavaScript', () => {
 			'href',
 			'https://www.linkedin.com/in/piyush-sinha-sdet',
 		);
+		await expect(page.getByTestId('test-label'), 'no label for a form that is not shown').toBeHidden();
 	});
 });
