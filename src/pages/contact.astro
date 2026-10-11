@@ -15,7 +15,7 @@ import { owner, turnstileSiteKey } from '../lib/site';
 	<div class="frame grid gap-10 lg:grid-cols-[minmax(0,40rem)_minmax(0,1fr)] lg:gap-16">
 	<div class="contact">
 		<div class="form-label"><TestLabel check="enquiry" /></div>
-		<form class="enquiry-form" data-spotlight action="/api/enquiry" method="post" novalidate data-site-key={turnstileSiteKey}>
+		<form class="enquiry-form" data-spotlight data-lit action="/api/enquiry" method="post" novalidate data-site-key={turnstileSiteKey}>
 			<div class="field">
 				<label for="name">Name</label>
 				<input id="name" name="name" autocomplete="name" maxlength={limits.name} aria-describedby="name-error" />
@@ -83,7 +83,7 @@ import { owner, turnstileSiteKey } from '../lib/site';
 			</p>
 		</noscript>
 	</div>
-	<aside class="reach self-start">
+	<aside class="other-ways self-start">
 		<h2 class="font-wide text-lg font-bold">Other ways to reach me</h2>
 		<ul class="mt-3 grid gap-2">
 			<li><ExternalLink class="link" href={owner.links.linkedin}>Message me on LinkedIn</ExternalLink></li>
@@ -225,34 +225,17 @@ import { owner, turnstileSiteKey } from '../lib/site';
 		background: var(--surface);
 		box-shadow: 0 34px 70px -44px color-mix(in srgb, var(--glow) 75%, transparent);
 	}
-	/* Its border lights up where the pointer is (data-spotlight sets --mx and --my) and while the Visitor
-	   is in the form. A still light, not a travelling one, so nothing repaints while they type. */
-	.enquiry-form::after {
-		content: '';
-		position: absolute;
-		inset: -1px;
-		padding: 1.5px;
-		border-radius: inherit;
-		background: radial-gradient(18rem circle at var(--mx, 50%) var(--my, 0%), var(--accent), transparent 70%);
-		-webkit-mask:
-			linear-gradient(#000 0 0) content-box,
-			linear-gradient(#000 0 0);
-		-webkit-mask-composite: xor;
-		mask:
-			linear-gradient(#000 0 0) content-box exclude,
-			linear-gradient(#000 0 0);
-		opacity: 0;
-		transition: opacity 0.3s ease;
-		pointer-events: none;
-	}
-	.enquiry-form:hover::after,
-	.enquiry-form:focus-within::after {
-		opacity: 1;
+	/* Its border lights up (data-lit) where the pointer is, and while the Visitor is in the form. A still
+	   light, not a travelling one, so nothing repaints while they type. */
+	.enquiry-form {
+		--lit-size: 18rem;
+		--lit-fade: 70%;
+		--lit-y: 0%;
 	}
 	.form-status[data-state='sent'] {
 		border-color: var(--accent);
 	}
-	.reach {
+	.other-ways {
 		padding: 1.5rem;
 		border: 1px solid var(--rule);
 		border-radius: 1rem;

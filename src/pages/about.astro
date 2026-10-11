@@ -76,7 +76,7 @@ const learning = [
 		</div>
 
 		<aside class="order-first self-start lg:order-none lg:sticky lg:top-24">
-			<div class="glance lit relative p-6" data-spotlight>
+			<div class="glance relative p-6" data-spotlight data-lit>
 				<dl class="grid gap-4">
 					<div>
 						<dt class="text-sm font-semibold text-ink-2">Now</dt>
@@ -107,7 +107,7 @@ const learning = [
 			{
 				career.map(({ when, role, where, what }, i) => (
 					<li class="step" data-reveal style={`--d:${i}`}>
-						<div class="step-card lit" data-spotlight data-tilt="6">
+						<div class="step-card" data-spotlight data-lit="travel" data-tilt="6">
 							<p class="text-sm font-semibold text-ink-2 tabular-nums">{when}</p>
 							<h3 class="mt-1 font-wide text-lg font-bold">{role}</h3>
 							<p class="font-medium">{where}</p>
@@ -135,38 +135,13 @@ const learning = [
 </BaseLayout>
 
 <style>
-	/* The at-a-glance card: a solid surface (so text contrast holds) lifted on a soft violet glow. */
+	/* The at-a-glance card: a solid surface (so text contrast holds) lifted on a soft violet glow, with
+	   a border that lights up (data-lit). */
 	.glance {
 		border: 1px solid var(--rule);
 		border-radius: 1rem;
 		background: var(--surface);
-		box-shadow: 0 30px 60px -40px color-mix(in srgb, var(--glow) 70%, transparent);
-	}
-
-	/* A border that lights up where the pointer is, as on the entry cards (data-spotlight sets --mx and
-	   --my; data-tilt sets .is-lit on touch screens). */
-	.lit::after {
-		content: '';
-		position: absolute;
-		inset: -1px;
-		padding: 1.5px;
-		border-radius: inherit;
-		background: radial-gradient(16rem circle at var(--mx, 50%) var(--my, 50%), var(--accent), transparent 65%);
-		-webkit-mask:
-			linear-gradient(#000 0 0) content-box,
-			linear-gradient(#000 0 0);
-		-webkit-mask-composite: xor;
-		mask:
-			linear-gradient(#000 0 0) content-box exclude,
-			linear-gradient(#000 0 0);
-		opacity: 0;
-		transition: opacity 0.3s ease;
-		pointer-events: none;
-	}
-	.lit:hover::after,
-	.lit:focus-within::after,
-	.lit.is-lit::after {
-		opacity: 1;
+		box-shadow: var(--glow-shadow);
 	}
 
 	/* A vertical line on phones, a horizontal one on wide screens: each step is one role, newest first. */
@@ -221,7 +196,8 @@ const learning = [
 	}
 
 	@media screen and (prefers-reduced-motion: no-preference) {
-		/* Role cards lean towards the pointer, or as they scroll past the middle of a touch screen. */
+		/* Role cards lean towards the pointer, or as they scroll past the middle of a touch screen, and a
+	   light travels round a lit one's border (data-lit="travel"). */
 		.step-card {
 			transform: perspective(900px) rotateX(var(--rx, 0deg)) rotateY(var(--ry, 0deg));
 			transition:
@@ -232,14 +208,6 @@ const learning = [
 		.step-card:hover {
 			translate: 0 -3px;
 			box-shadow: 0 24px 44px -30px color-mix(in srgb, var(--glow) 75%, transparent);
-		}
-		/* A light travels round the border of a lit role card. */
-		.step-card:hover::after,
-		.step-card.is-lit::after {
-			background:
-				radial-gradient(16rem circle at var(--mx, 50%) var(--my, 50%), var(--accent), transparent 65%),
-				conic-gradient(from var(--angle), transparent 0 70%, var(--glow) 85%, transparent 100%);
-			animation: travel 3.2s linear infinite;
 		}
 	}
 </style>

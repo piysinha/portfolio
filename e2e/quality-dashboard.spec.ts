@@ -1,5 +1,6 @@
 import AxeBuilder from '@axe-core/playwright';
 import { expect, test, type Page } from '@playwright/test';
+import { expectBorderToLightUp } from './lit-border';
 import { run, serveSummary, summaryWith } from './summary';
 
 const overall = (page: Page) => page.getByRole('status');
@@ -25,7 +26,7 @@ test('shows all checks passing, with each latest run and its report', async ({ p
 });
 
 test('says so plainly when the live site fails its Smoke run', async ({ page }) => {
-	await serveSummary(page, summaryWith([run('gate', 2)], [run('smoke', 1, 'failed')]));
+	await serveSummary(page, summaryWith([run('gate', 2)], [run('smoke', 1, { status: 'failed' })]));
 	await page.goto('/quality');
 
 	await expect(overall(page)).toContainText('Production check failing');
@@ -34,7 +35,7 @@ test('says so plainly when the live site fails its Smoke run', async ({ page }) 
 });
 
 test('explains a release the Gate run blocked', async ({ page }) => {
-	await serveSummary(page, summaryWith([run('gate', 1, 'failed')], [run('smoke', 3)]));
+	await serveSummary(page, summaryWith([run('gate', 1, { status: 'failed' })], [run('smoke', 3)]));
 	await page.goto('/quality');
 
 	await expect(overall(page)).toContainText('Latest release blocked');
@@ -53,7 +54,7 @@ test('stays useful when the reports site cannot be reached', async ({ page }) =>
 });
 
 test('the trend links every recent run to its report, oldest first', async ({ page }) => {
-	await serveSummary(page, summaryWith([run('gate', 1), run('gate', 2, 'failed'), run('gate', 3)], [run('smoke', 1)]));
+	await serveSummary(page, summaryWith([run('gate', 1), run('gate', 2, { status: 'failed' }), run('gate', 3)], [run('smoke', 1)]));
 	await page.goto('/quality');
 	const gateTrend = page.getByRole('region', { name: 'Gate run history' });
 
@@ -67,7 +68,7 @@ test('the trend links every recent run to its report, oldest first', async ({ pa
 
 test('a trend bar shows its run in a tooltip on hover and keyboard focus', async ({ page, isMobile }) => {
 	test.skip(isMobile, 'Hover needs a pointer; focus is covered on the desktop projects');
-	await serveSummary(page, summaryWith([run('gate', 1), run('gate', 2, 'failed')], [run('smoke', 1)]));
+	await serveSummary(page, summaryWith([run('gate', 1), run('gate', 2, { status: 'failed' })], [run('smoke', 1)]));
 	await page.goto('/quality');
 	const bars = page.getByRole('region', { name: 'Gate run history' }).getByRole('link');
 	const tooltip = page.getByRole('tooltip');
@@ -85,11 +86,12 @@ test('promotion lights up only when the Gate run passed', async ({ page }) => {
 	await page.goto('/quality');
 
 	await expect(promotion(page)).toContainText('Promoted');
+	await expect(promotion(page)).toContainText('went live');
 	await expect(promotion(page)).toHaveAttribute('data-promoted', 'true');
 	await expect(card(page, 'Smoke run')).not.toContainText('earlier Release');
 
 	await page.unrouteAll();
-	await serveSummary(page, summaryWith([run('gate', 1, 'failed', NEWER_CHANGE)], [run('smoke', 3)]));
+	await serveSummary(page, summaryWith([run('gate', 1, { status: 'failed', commit: NEWER_CHANGE })], [run('smoke', 3)]));
 	await page.reload();
 
 	await expect(promotion(page)).toContainText('Not promoted');
@@ -97,10 +99,13 @@ test('promotion lights up only when the Gate run passed', async ({ page }) => {
 });
 
 test('a Smoke run from an earlier Release is not shown as part of the latest one', async ({ page }) => {
-	await serveSummary(page, summaryWith([run('gate', 1, 'passed', NEWER_CHANGE)], [run('smoke', 3)]));
+	await serveSummary(page, summaryWith([run('gate', 1, { commit: NEWER_CHANGE })], [run('smoke', 3)]));
 	await page.goto('/quality');
 
-	await expect(promotion(page)).toContainText('Promoted');
+	// Lit, but not yet "Promoted": no Smoke run of this change shows it went live.
+	await expect(promotion(page)).toHaveAttribute('data-promoted', 'true');
+	await expect(promotion(page)).toContainText('Cleared to go live');
+	await expect(promotion(page)).not.toContainText(/Promoted|went live\./);
 	await expect(card(page, 'Smoke run')).toContainText('From an earlier Release');
 	await expect(card(page, 'Smoke run')).toContainText('34 passed');
 });
@@ -125,6 +130,48 @@ test('the Release shows no pass or fail colour when results cannot load', async 
 		expect(edge).toBe(accent);
 	}
 	await expect(card(page, 'Gate run')).toContainText("Couldn't load this run");
+	await expect(promotion(page)).toContainText("Couldn't load the Gate run");
+	await expect(promotion(page).getByRole('link', { name: /reports site/ })).toHaveAttribute('href', 'https://piyush-sinha-test-reports.pages.dev/');
+});
+
+test('promotion says there is nothing to promote before the first Gate run', async ({ page }) => {
+	await serveSummary(page, summaryWith([], [run('smoke', 1)]));
+	await page.goto('/quality');
+
+	await expect(promotion(page)).toContainText('No Gate run yet');
+	await expect(promotion(page)).not.toHaveAttribute('data-promoted');
+});
+
+test('the Release tiles light up under the pointer, or on scroll on a phone, in the accent colour', async ({ page, isMobile }) => {
+	await serveSummary(page, summaryWith([run('gate', 2)], [run('smoke', 1)]));
+	await page.goto('/quality');
+	await expect(card(page, 'Smoke run')).toContainText('34 passed');
+
+	for (const tile of [card(page, 'Gate run'), promotion(page), card(page, 'Smoke run')]) {
+		await expectBorderToLightUp(tile, isMobile);
+		// The lit border is the accent, never the green or red of a result.
+		const [lit, accent] = await tile.evaluate((element) => {
+			const probe = element.appendChild(document.createElement('span'));
+			probe.style.color = 'var(--accent)';
+			const colours = [getComputedStyle(element, '::after').backgroundImage, getComputedStyle(probe).color];
+			probe.remove();
+			return colours;
+		});
+		expect(lit).toContain(accent);
+	}
+});
+
+test('a Release tile lifts as it scrolls to the middle of a phone screen', async ({ page, isMobile }) => {
+	test.skip(!isMobile, 'On desktop the tile lifts under the pointer');
+	await serveSummary(page, summaryWith([run('gate', 2)], [run('smoke', 1)]));
+	await page.goto('/quality');
+	const gate = card(page, 'Gate run');
+	const resting = await gate.evaluate((element) => getComputedStyle(element).transform);
+
+	await gate.evaluate((element) => element.scrollIntoView({ block: 'center' }));
+
+	await expect(gate).toHaveClass(/\bis-lit\b/);
+	await expect.poll(() => gate.evaluate((element) => getComputedStyle(element).transform)).not.toBe(resting);
 });
 
 test('the latest Release is labelled with the test that checks it', async ({ page }) => {
@@ -139,7 +186,7 @@ for (const colorScheme of ['light', 'dark'] as const) {
 	test(`the dashboard has no accessibility violations with a failing run in ${colorScheme} theme`, async ({ page }) => {
 		// Axe checks the settled design: mid-animation colours are not what Visitors read.
 		await page.emulateMedia({ colorScheme, reducedMotion: 'reduce' });
-		await serveSummary(page, summaryWith([run('gate', 1, 'failed'), run('gate', 2)], [run('smoke', 1, 'failed')]));
+		await serveSummary(page, summaryWith([run('gate', 1, { status: 'failed' }), run('gate', 2)], [run('smoke', 1, { status: 'failed' })]));
 		await page.goto('/quality');
 		await expect(overall(page)).toContainText('Production check failing');
 

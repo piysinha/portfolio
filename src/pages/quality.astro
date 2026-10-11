@@ -21,7 +21,7 @@ const kinds = [
 		<noscript><p class="overall">See the results on the <ExternalLink href={reports.site}>reports site</ExternalLink>.</p></noscript>
 	</Fragment>
 
-	<section class="release" aria-labelledby="release-heading" data-reveal>
+	<section class="release frame" aria-labelledby="release-heading" data-reveal>
 		<TestLabel check="latestRelease" />
 		<h2 id="release-heading">The latest Release</h2>
 		<p class="release-what">
@@ -35,7 +35,7 @@ const kinds = [
 						<Fragment>
 							{i === 1 && (
 								<li class="step">
-									<section class="tile promotion" aria-labelledby="promotion-heading">
+									<section class="tile promotion" aria-labelledby="promotion-heading" data-spotlight data-lit>
 										<span class="promotion-mark" aria-hidden="true" />
 										<h3 id="promotion-heading">Promotion</h3>
 										<p class="run-what">Only a Gate run that passes promotes its deploy to the live site.</p>
@@ -44,7 +44,7 @@ const kinds = [
 								</li>
 							)}
 							<li class="step">
-								<section class="tile run-card" aria-labelledby={`${kind}-heading`}>
+								<section class="tile run-card" aria-labelledby={`${kind}-heading`} data-spotlight data-lit>
 									<h3 id={`${kind}-heading`}>{name}</h3>
 									<p class="run-what">{what}</p>
 									<div class="run-body" data-card={kind}>
@@ -131,17 +131,14 @@ const kinds = [
 		const run = view?.latest[kind];
 		if (!run) {
 			delete tile.dataset.result;
-			body.replaceChildren(
-				view
-					? el('p', { className: 'muted' }, 'No runs yet.')
-					: el('p', { className: 'muted' }, "Couldn't load this run. See it on the ", externalLink(reports.site, 'reports site'), '.'),
-			);
+			body.replaceChildren(el('p', { className: 'muted' }, ...(view ? ['No runs yet.'] : couldNotLoad('this run'))));
 			return;
 		}
 		tile.dataset.result = run.status;
 		const time = el('time', { dateTime: run.startedAt, title: run.startedAt }, run.when);
 		const { passed, failed, flaky, skipped } = run.counts;
-		const earlier = kind === 'smoke' && !!view.latest.gate && !view.release.smokeFromThisRelease;
+		const { release } = view;
+		const earlier = kind === 'smoke' && release.state !== 'none' && release.smoke === 'earlier-release';
 		if (earlier) tile.dataset.release = 'earlier';
 		else delete tile.dataset.release;
 		body.replaceChildren(
@@ -154,29 +151,35 @@ const kinds = [
 		);
 	}
 
+	/** What a tile says when the results didn't load, pointing to the reports site. */
+	function couldNotLoad(what: string) {
+		return [`Couldn't load ${what}. See it on the `, externalLink(reports.site, 'reports site'), '.'];
+	}
+
 	/**
 	 * Promotion has no test result of its own, so it never turns green or red: it lights up in the
 	 * accent colour when the Gate run passed, and stays dim when it failed. Without a Gate run (or
-	 * without results at all) it is left as it was served: neither lit nor dim.
+	 * without results at all) it is neither lit nor dim. It says "Promoted" only once its own Smoke
+	 * run shows the change went live; until then, the Gate run has only cleared it to go live.
 	 */
 	function renderPromotion(view: DashboardView | undefined) {
 		const state = document.querySelector<HTMLElement>('[data-promotion-state]');
 		const tile = state?.closest<HTMLElement>('.tile');
 		if (!state || !tile) return;
-		if (!view?.latest.gate) {
+		const release = view?.release;
+		if (!release || release.state === 'none') {
 			delete tile.dataset.promoted;
-			state.replaceChildren();
+			state.replaceChildren(...(release ? ['No Gate run yet, so nothing to promote.'] : couldNotLoad('the Gate run that decides this')));
 			return;
 		}
-		const { promoted, smokeFromThisRelease } = view.release;
-		tile.dataset.promoted = String(promoted);
-		// "Went live" only once its own Smoke run proves it; until then the Gate run only cleared it.
-		const detail = !promoted
-			? ' The Gate run failed, so nothing went live.'
-			: smokeFromThisRelease
-				? ' The deploy that passed went live.'
-				: ' The Gate run passed, so this change was cleared to go live.';
-		state.replaceChildren(el('strong', {}, promoted ? 'Promoted' : 'Not promoted'), detail);
+		tile.dataset.promoted = String(release.state === 'promoted');
+		const [headline, detail] =
+			release.state === 'blocked'
+				? ['Not promoted', ' The Gate run failed, so nothing went live.']
+				: release.smoke === 'this-release'
+					? ['Promoted', ' The deploy that passed went live.']
+					: ['Cleared to go live', " The Gate run passed. This change's Smoke run on the live site isn't in yet."];
+		state.replaceChildren(el('strong', {}, headline), detail);
 	}
 
 	function renderTrend(kind: RunKind, trend: DashboardView['trend'][RunKind]) {
@@ -297,7 +300,11 @@ const kinds = [
 	.overall :global(strong) {
 		font-weight: 700;
 	}
-	.overall :global(a) {
+	/* Links in text the script writes: the reports site, a commit. */
+	.overall :global(a),
+	.run-body :global(.muted a),
+	.promotion-state :global(a),
+	.source :global(a) {
 		color: var(--accent);
 		text-decoration: underline;
 	}
@@ -357,7 +364,8 @@ const kinds = [
 		transform-style: preserve-3d;
 	}
 	.tile {
-		/* A tile's edge: the accent until it shows a real result. */
+		/* A tile's edge: the accent until it shows a real result. Its lit border (data-lit) is always the
+		   accent, never a result's green or red. */
 		--edge: var(--accent);
 		position: relative;
 		display: grid;
@@ -499,13 +507,18 @@ const kinds = [
 				transform 0.4s cubic-bezier(0.2, 0.8, 0.2, 1),
 				box-shadow 0.4s ease;
 		}
+		/* A tile lifts towards the Visitor under the pointer or, on a touch screen, as the middle of the
+		   screen crosses it (.is-lit). */
 		.tile:hover,
-		.tile:focus-within {
+		.tile:focus-within,
+		.tile.is-lit {
 			transform: translateZ(44px);
 		}
-		/* Once promoted, a light travels down the rail towards the live site. The pseudo-element is as
-		   long as the rail, with the light at its far end, so it moves with a transform (no repaints). */
+		/* Once promoted, a light travels along the rail towards the live site. The pseudo-element is as
+		   long as the rail, with the light at its far end, so it moves with a transform (no repaints).
+		   --rail-from is where it starts: above the rail on phones, to its left on wide screens. */
 		.track:has([data-promoted='true'])::after {
+			--rail-from: 0 -100%;
 			content: '';
 			position: absolute;
 			top: 0;
@@ -515,7 +528,7 @@ const kinds = [
 			margin-left: -5px;
 			background: radial-gradient(circle at 50% calc(100% - 5px), var(--accent) 3px, color-mix(in srgb, var(--glow) 60%, transparent) 4px, transparent 5px);
 			pointer-events: none;
-			animation: down-the-rail 3.6s cubic-bezier(0.45, 0, 0.55, 1) infinite;
+			animation: along-the-rail 3.6s cubic-bezier(0.45, 0, 0.55, 1) infinite;
 		}
 		@media (min-width: 64rem) {
 			.track:has([data-promoted='true'])::after {
@@ -525,27 +538,13 @@ const kinds = [
 				height: 10px;
 				margin: -5px 0 0;
 				background: radial-gradient(circle at calc(100% - 5px) 50%, var(--accent) 3px, color-mix(in srgb, var(--glow) 60%, transparent) 4px, transparent 5px);
-				animation-name: along-the-rail;
+				--rail-from: -100% 0;
 			}
-		}
-	}
-	@keyframes down-the-rail {
-		from {
-			translate: 0 -100%;
-			opacity: 0;
-		}
-		15%,
-		85% {
-			opacity: 1;
-		}
-		to {
-			translate: 0 0;
-			opacity: 0;
 		}
 	}
 	@keyframes along-the-rail {
 		from {
-			translate: -100% 0;
+			translate: var(--rail-from);
 			opacity: 0;
 		}
 		15%,
@@ -566,14 +565,6 @@ const kinds = [
 		min-height: 11.5rem;
 		align-content: start;
 	}
-	.run-body :global(.muted) {
-		color: var(--ink-2);
-		font-size: 0.9rem;
-	}
-	.run-body :global(.muted a) {
-		color: var(--accent);
-		text-decoration: underline;
-	}
 	/* Phones: less tilt, so the tiles keep their width. */
 	@media (max-width: 39.999rem) {
 		.track {
@@ -581,7 +572,8 @@ const kinds = [
 		}
 	}
 	.run-what,
-	.muted {
+	.muted,
+	.run-body :global(.muted) {
 		margin: 0;
 		color: var(--ink-2);
 		font-size: 0.9rem;
@@ -641,7 +633,8 @@ const kinds = [
 	.history {
 		display: grid;
 		gap: 1.25rem;
-		margin-top: 2.5rem;
+		/* Clear of the Release's frame, whose rules sit 1.75rem outside it. */
+		margin-top: 5rem;
 	}
 	.history > h2 {
 		font-size: clamp(1.625rem, 4vw, 2.125rem);
@@ -734,10 +727,6 @@ const kinds = [
 		cursor: pointer;
 		color: var(--accent);
 		font-weight: 650;
-	}
-	.source :global(a) {
-		color: var(--accent);
-		text-decoration: underline;
 	}
 	.table-scroll {
 		margin-top: 0.75rem;

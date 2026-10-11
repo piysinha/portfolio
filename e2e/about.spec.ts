@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test';
+import { expectBorderToLightUp } from './lit-border';
 
 test('About tells the Visitor who Piyush is', async ({ page }) => {
 	await page.goto('/about');
@@ -42,4 +43,11 @@ test('the Career path is labelled with the test that checks it', async ({ page }
 	await expect(page.getByRole('region', { name: 'Career path' }).getByTestId('test-label')).toHaveText(
 		/about\.spec\.ts.*the Career path runs newest first, from test automation back to hospitality/,
 	);
+});
+
+test('the at-a-glance card lights up under the pointer, or on scroll on a phone', async ({ page, isMobile }) => {
+	await page.goto('/about');
+	const glance = page.locator('[data-spotlight]', { has: page.getByRole('link', { name: 'Download résumé' }) });
+
+	await expectBorderToLightUp(glance, isMobile);
 });
