@@ -49,6 +49,11 @@ const previewImageUrl = new URL(previewImage.path, `https://${productionHost}`).
 				theme = matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
 			}
 			document.documentElement.dataset.theme = theme;
+			// A page reached through a view transition is marked, so an entry's title that flows in from its card
+			// doesn't also rise from its mask (see .vt-arrival in global.css).
+			addEventListener('pagereveal', (event) => {
+				if (event.viewTransition) document.documentElement.classList.add('vt-arrival');
+			});
 		</script>
 		<title>{pageTitle(title)}</title>
 	</head>

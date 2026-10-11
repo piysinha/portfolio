@@ -616,6 +616,11 @@
 		animation: fade-up 0.7s cubic-bezier(0.2, 0.8, 0.2, 1) 0.18s both;
 	}
 
+	/* An entry's title that flows in from its card is already moving, so it doesn't rise as well. */
+	.vt-arrival .page-hero h1.title-long {
+		animation: none;
+	}
+
 	.btn {
 		transition:
 			background-color 0.15s ease,

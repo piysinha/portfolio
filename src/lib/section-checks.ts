@@ -5,6 +5,10 @@
  */
 export const sectionChecks = {
 	featuredWork: { spec: 'home.spec.ts', title: 'Home features work that opens its own page' },
+	projectAreas: { spec: 'content-pages.spec.ts', title: 'Projects are grouped by area, test automation first' },
+	projectSource: { spec: 'content-pages.spec.ts', title: 'a Project links to its source code' },
+	caseStudyCards: { spec: 'content-pages.spec.ts', title: 'a Case study card leads with the Problem its page tells' },
+	caseStudyStory: { spec: 'content-pages.spec.ts', title: 'a Case study tells its Problem, Approach and Outcome' },
 } as const;
 
 export type SectionCheck = keyof typeof sectionChecks;
