@@ -3,6 +3,7 @@ import '@fontsource-variable/archivo/wdth.css';
 import '@fontsource-variable/jetbrains-mono';
 import ExternalLink from '../components/ExternalLink.astro';
 import Header from '../components/Header.astro';
+import HeroBackdrop from '../components/HeroBackdrop.astro';
 import { productionHost } from '../lib/analytics';
 import { owner, pageTitle, previewImage } from '../lib/site';
 import '../styles/global.css';
@@ -57,7 +58,8 @@ const previewImageUrl = new URL(previewImage.path, `https://${productionHost}`).
 			{
 				Astro.slots.has('hero') && (
 					<section class="page-hero">
-						<div class="mx-auto max-w-page px-4 pt-12 pb-4 sm:px-6 sm:pt-16 sm:pb-6">
+						<div class="relative isolate mx-auto max-w-page px-4 pt-12 pb-4 sm:px-6 sm:pt-16 sm:pb-6">
+							<HeroBackdrop />
 							<slot name="hero" />
 						</div>
 					</section>

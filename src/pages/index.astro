@@ -2,7 +2,6 @@
 import { getCollection } from 'astro:content';
 import EntryCard from '../components/EntryCard.astro';
 import ExternalLink from '../components/ExternalLink.astro';
-import HeroBackdrop from '../components/HeroBackdrop.astro';
 import TerminalStack from '../components/TerminalStack.astro';
 import TestLabel from '../components/TestLabel.astro';
 import TrackRecord from '../components/TrackRecord.astro';
@@ -29,8 +28,7 @@ const toolbox = [
 ---
 
 <BaseLayout>
-	<div slot="hero" class="hero-stage">
-		<HeroBackdrop />
+	<div slot="hero">
 		<div class="grid items-center gap-10 lg:grid-cols-[minmax(0,1fr)_minmax(0,33rem)] lg:gap-14">
 			<div class="hero-main">
 				<h1 class="name font-display">
@@ -163,11 +161,6 @@ const toolbox = [
 			opacity: 0;
 			translate: 0 14px;
 		}
-	}
-	/* The backdrop sits behind the hero's content. */
-	.hero-stage {
-		position: relative;
-		isolation: isolate;
 	}
 	.cta :global(:focus-visible) {
 		outline-color: var(--on-band);

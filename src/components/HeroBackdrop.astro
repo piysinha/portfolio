@@ -1,10 +1,10 @@
 ---
-// Depth behind a page's hero: a grid floor laid back in perspective, and a violet glow that drifts
+// Depth behind every page's hero (BaseLayout puts it there): a grid floor laid back in perspective, and a violet glow that drifts
 // towards the pointer. Decoration only, so it is hidden from assistive technology and never takes clicks.
 ---
 
 <div class="hero-backdrop" aria-hidden="true">
-	<div class="floor"></div>
+	<div class="floor"><div class="grid"></div></div>
 	<div class="glow"></div>
 </div>
 
@@ -26,9 +26,12 @@
 	.hero-backdrop {
 		position: absolute;
 		z-index: -1;
-		inset: -5rem calc(50% - 50vw) -3rem;
+		inset: -5rem calc(50% - 50vw) -6rem;
 		overflow: hidden;
 		pointer-events: none;
+		/* Fades out into the page below, so there is no edge where the hero ends. */
+		-webkit-mask-image: linear-gradient(to bottom, #000 55%, transparent);
+		mask-image: linear-gradient(to bottom, #000 55%, transparent);
 	}
 	.floor {
 		position: absolute;
@@ -36,14 +39,20 @@
 		bottom: 22%;
 		left: -40%;
 		height: 60%;
-		background-image:
-			linear-gradient(to right, var(--grid-line) 1px, transparent 1px),
-			linear-gradient(to bottom, var(--grid-line) 1px, transparent 1px);
-		background-size: 56px 56px;
+		overflow: hidden;
 		transform: perspective(700px) rotateX(64deg);
 		transform-origin: bottom;
 		-webkit-mask-image: linear-gradient(to top, #000, transparent 80%);
 		mask-image: linear-gradient(to top, #000, transparent 80%);
+	}
+	/* One cell taller than the floor, so it can drift down a cell and loop without a seam. */
+	.grid {
+		position: absolute;
+		inset: -56px 0 0;
+		background-image:
+			linear-gradient(to right, var(--grid-line) 1px, transparent 1px),
+			linear-gradient(to bottom, var(--grid-line) 1px, transparent 1px);
+		background-size: 56px 56px;
 	}
 	.glow {
 		position: absolute;
@@ -54,7 +63,8 @@
 		background: radial-gradient(closest-side, color-mix(in srgb, var(--glow) 30%, transparent), transparent);
 	}
 	@media (prefers-reduced-motion: no-preference) {
-		.floor {
+		/* A transform, not background-position, so the drift never repaints the page. */
+		.grid {
 			animation: drift 6s linear infinite;
 		}
 		.glow {
@@ -65,7 +75,7 @@
 	}
 	@keyframes drift {
 		to {
-			background-position: 0 56px;
+			translate: 0 56px;
 		}
 	}
 </style>
