@@ -40,7 +40,22 @@ export interface DashboardView {
 	trend: Record<RunKind, { points: TrendPoint[]; passedLabel: string }>;
 	/** Every run, newest first across both kinds: the table view of the trend. */
 	table: TableRow[];
+	release: Release;
 }
+
+/**
+ * The latest Release: its Gate run, promotion if that passed, then its Smoke run. summary.json
+ * doesn't record promotion, so it is inferred from the Gate run. The latest Smoke run belongs to
+ * this Release only if it tested the same change after that Gate run passed; otherwise it is
+ * from an earlier Release (this one was blocked, or its own Smoke run isn't in yet).
+ */
+export type Release =
+	/** No Gate run yet, so there is no Release to show. */
+	| { state: 'none' }
+	/** The Gate run failed, so nothing was promoted. */
+	| { state: 'blocked'; smoke: 'earlier-release' | 'none' }
+	/** The Gate run passed, so its deploy was cleared to go live. Its own Smoke run proves it went live. */
+	| { state: 'promoted'; smoke: 'this-release' | 'earlier-release' | 'none' };
 
 const KIND_NAMES = { gate: 'Gate run', smoke: 'Smoke run' } as const;
 
@@ -70,7 +85,16 @@ export function dashboardView(summary: unknown, now: Date): DashboardView {
 				counts: run.counts,
 				reportUrl: run.reportUrl,
 			})),
+		release: release(gate, smoke),
 	};
+}
+
+function release(gate: RunSummary | undefined, smoke: RunSummary | undefined): Release {
+	if (!gate) return { state: 'none' };
+	if (gate.status === 'failed') return { state: 'blocked', smoke: smoke ? 'earlier-release' : 'none' };
+	if (!smoke) return { state: 'promoted', smoke: 'none' };
+	const ownSmoke = smoke.commit === gate.commit && smoke.startedAt >= gate.startedAt;
+	return { state: 'promoted', smoke: ownSmoke ? 'this-release' : 'earlier-release' };
 }
 
 function card(run: RunSummary, now: Date): RunCard {

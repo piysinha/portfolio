@@ -63,6 +63,8 @@
 		/* Thin construction lines: the hero's grid floor and the frames round sections. */
 		--grid-line: color-mix(in srgb, var(--ink) 9%, transparent);
 		--mark: color-mix(in srgb, var(--ink) 38%, transparent);
+		/* A raised panel's shadow: a soft violet glow under it. */
+		--glow-shadow: 0 30px 60px -40px color-mix(in srgb, var(--glow) 70%, transparent);
 		/* Status colours, reserved for real pass/fail results and always paired with an icon and words. */
 		--pass: #137a36;
 		--fail: #c0322a;
@@ -444,33 +446,6 @@
 		line-height: 1.5;
 	}
 
-	/* A border that lights up where the pointer is (or, on touch screens, as the card crosses the middle
-	   of the screen). data-spotlight sets --mx and --my; data-tilt sets .is-lit on touch screens. */
-	.entry-card::after {
-		content: '';
-		position: absolute;
-		inset: -1px;
-		padding: 1.5px;
-		border-radius: inherit;
-		background: radial-gradient(16rem circle at var(--mx, 50%) var(--my, 50%), var(--accent), transparent 65%);
-		-webkit-mask:
-			linear-gradient(#000 0 0) content-box,
-			linear-gradient(#000 0 0);
-		-webkit-mask-composite: xor;
-		mask:
-			linear-gradient(#000 0 0) content-box exclude,
-			linear-gradient(#000 0 0);
-		opacity: 0;
-		transition: opacity 0.3s ease;
-		pointer-events: none;
-	}
-
-	.entry-card:hover::after,
-	.entry-card:focus-within::after,
-	.entry-card.is-lit::after {
-		opacity: 1;
-	}
-
 	/* ---------- Frames: thin rules out to the page edge, with + marks at the content's corners ---------- */
 
 	.frame {
@@ -503,6 +478,42 @@
 			linear-gradient(var(--mark), var(--mark)) var(--o) 100% / 1px 13px no-repeat,
 			linear-gradient(var(--mark), var(--mark)) calc(100% - var(--o)) 100% / 1px 13px no-repeat;
 		pointer-events: none;
+	}
+
+	/* ---------- Lit borders: a border that lights up where the pointer is ---------- */
+
+	/* On touch screens, which have no pointer, it lights up (.is-lit) as it crosses the middle of the
+	   screen. Opt in with data-lit, plus data-spotlight to follow the pointer (it sets --mx and --my);
+	   data-lit="travel" also sends a light round the border while it is lit (see Motion). The element
+	   must be positioned. Tune it with --lit-size (the light's radius), --lit-fade (where it fades out)
+	   and --lit-y (where it sits before the pointer moves, e.g. 0% for the top edge). */
+	[data-lit]::after {
+		content: '';
+		position: absolute;
+		inset: -1px;
+		padding: 1.5px;
+		border-radius: inherit;
+		background: radial-gradient(
+			var(--lit-size, 16rem) circle at var(--mx, 50%) var(--my, var(--lit-y, 50%)),
+			var(--accent),
+			transparent var(--lit-fade, 65%)
+		);
+		-webkit-mask:
+			linear-gradient(#000 0 0) content-box,
+			linear-gradient(#000 0 0);
+		-webkit-mask-composite: xor;
+		mask:
+			linear-gradient(#000 0 0) content-box exclude,
+			linear-gradient(#000 0 0);
+		opacity: 0;
+		transition: opacity 0.3s ease;
+		pointer-events: none;
+	}
+
+	[data-lit]:hover::after,
+	[data-lit]:focus-within::after,
+	[data-lit].is-lit::after {
+		opacity: 1;
 	}
 
 	/* ---------- Long-form text ---------- */
@@ -616,6 +627,11 @@
 		animation: fade-up 0.7s cubic-bezier(0.2, 0.8, 0.2, 1) 0.18s both;
 	}
 
+	/* An entry's title that flows in from its card is already moving, so it doesn't rise as well. */
+	.vt-arrival .page-hero h1.title-long {
+		animation: none;
+	}
+
 	.btn {
 		transition:
 			background-color 0.15s ease,
@@ -652,11 +668,15 @@
 		box-shadow: 0 28px 50px -30px color-mix(in srgb, var(--glow) 75%, transparent);
 	}
 
-	/* A light travels round the border of a lit card. */
-	.entry-card:not(.is-row):hover::after,
-	.entry-card.is-lit::after {
+	/* A light travels round a lit border that opts in with data-lit="travel". */
+	[data-lit='travel']:hover::after,
+	[data-lit='travel'].is-lit::after {
 		background:
-			radial-gradient(16rem circle at var(--mx, 50%) var(--my, 50%), var(--accent), transparent 65%),
+			radial-gradient(
+				var(--lit-size, 16rem) circle at var(--mx, 50%) var(--my, var(--lit-y, 50%)),
+				var(--accent),
+				transparent var(--lit-fade, 65%)
+			),
 			conic-gradient(from var(--angle), transparent 0 70%, var(--glow) 85%, transparent 100%);
 		animation: travel 3.2s linear infinite;
 	}

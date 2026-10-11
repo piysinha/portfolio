@@ -1,6 +1,7 @@
 ---
 import { getCollection, render, type CollectionEntry } from 'astro:content';
 import EntryMeta from '../../components/EntryMeta.astro';
+import TestLabel from '../../components/TestLabel.astro';
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import { transitionName } from '../../lib/transitions';
 
@@ -25,23 +26,31 @@ const { Content } = await render(caseStudy);
 		</h1>
 		<EntryMeta date={caseStudy.data.date} tags={caseStudy.data.tags} />
 	</Fragment>
-	<div class="grid gap-12 lg:grid-cols-[minmax(0,1fr)_minmax(0,22rem)] lg:gap-16">
-		<article class="prose">
-			<h2>Problem</h2>
-			<p>{caseStudy.data.problem}</p>
-			<h2>Approach</h2>
-			<p>{caseStudy.data.approach}</p>
-			<h2>Outcome</h2>
-			<p>{caseStudy.data.outcome}</p>
-			<Content />
-		</article>
+	<div class="frame grid gap-12 lg:grid-cols-[minmax(0,1fr)_minmax(0,22rem)] lg:gap-16">
+		<div>
+			<TestLabel check="caseStudyStory" />
+			<article class="prose">
+				<h2>Problem</h2>
+				<p>{caseStudy.data.problem}</p>
+				<h2>Approach</h2>
+				<p>{caseStudy.data.approach}</p>
+				<h2>Outcome</h2>
+				<p>{caseStudy.data.outcome}</p>
+				<Content />
+			</article>
+		</div>
 		<aside class="self-start lg:sticky lg:top-24">
-			<div class="rounded-2xl border border-rule bg-surface p-6">
+			<div class="panel p-6" data-spotlight data-lit>
 				{
 					caseStudy.data.highlight && (
 						<div class="mb-5 border-b border-rule pb-5">
 							<p class="text-sm font-semibold text-ink-2">Headline result</p>
-							<p class="mt-1 font-wide text-xl leading-tight font-extrabold">{caseStudy.data.highlight}</p>
+							<p class="headline mt-2 font-wide text-xl leading-tight font-extrabold">
+								<svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
+									<path d="M5 12.5l4.5 4.5L19 7.5" />
+								</svg>
+								<span>{caseStudy.data.highlight}</span>
+							</p>
 						</div>
 					)
 				}
@@ -58,3 +67,34 @@ const { Content } = await render(caseStudy);
 		</aside>
 	</div>
 </BaseLayout>
+
+<style>
+	/* The aside stands off the page: a raised surface with a violet glow under it, and a border that
+	   lights up (data-lit), from its top edge until the pointer moves. It never tilts: it is sticky. */
+	.panel {
+		--lit-y: 0%;
+		position: relative;
+		border: 1px solid var(--rule);
+		border-radius: 1rem;
+		/* Solid, so axe can check the contrast of the text on it. */
+		background: var(--surface);
+		box-shadow:
+			inset 0 1px 0 color-mix(in srgb, var(--accent) 22%, transparent),
+			var(--glow-shadow);
+	}
+	/* A headline result gets the accent tick that cards use; green is kept for real test results. */
+	.headline {
+		display: flex;
+		align-items: baseline;
+		gap: 0.5rem;
+	}
+	.headline svg {
+		flex: none;
+		align-self: center;
+		fill: none;
+		stroke: var(--accent);
+		stroke-width: 3;
+		stroke-linecap: round;
+		stroke-linejoin: round;
+	}
+</style>

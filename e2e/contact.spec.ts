@@ -1,5 +1,6 @@
 import AxeBuilder from '@axe-core/playwright';
 import { expect, test, type Page } from '@playwright/test';
+import { expectBorderToLightUp } from './lit-border';
 import { fakeTurnstile } from './turnstile';
 
 // The Contact page with its backend mocked: /api/enquiry never runs and Turnstile is a stand-in.
@@ -102,6 +103,25 @@ test("a failed send keeps the Visitor's message, offers LinkedIn, and can be ret
 	]);
 });
 
+test('the form is labelled with the test that checks it', async ({ page }) => {
+	await page.goto('/contact');
+
+	const label = page.getByRole('main').getByTestId('test-label');
+	await expect(label).toHaveCount(1);
+	await expect(label).toHaveText(/contact\.spec\.ts.*Visitor sends an Enquiry and sees it confirmed/);
+});
+
+test('the form lights up under the pointer, or on scroll on a phone, but never moves', async ({ page, isMobile }) => {
+	await page.goto('/contact');
+	const form = page.getByRole('main').locator('form');
+
+	await expectBorderToLightUp(form, isMobile);
+	// It never tilts, lifts or runs a travelling light, so nothing moves or repaints while the Visitor types.
+	await expect(form).toHaveCSS('transform', 'none');
+	await expect(form).toHaveCSS('translate', 'none');
+	expect(await form.evaluate((element) => getComputedStyle(element, '::after').animationName)).toBe('none');
+});
+
 test('Turnstile loads only once the Visitor starts on the form', async ({ page }) => {
 	const loads = await fakeTurnstile(page);
 	await page.goto('/contact');
@@ -169,5 +189,6 @@ test.describe('without JavaScript', () => {
 			'href',
 			'https://www.linkedin.com/in/piyush-sinha-sdet',
 		);
+		await expect(page.getByTestId('test-label'), 'no label for a form that is not shown').toBeHidden();
 	});
 });

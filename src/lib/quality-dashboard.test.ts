@@ -120,3 +120,50 @@ describe('dashboardView', () => {
 		});
 	});
 });
+
+describe('the latest Release', () => {
+	const newerChange = { commit: 'c0ffee0000000000000000000000000000000000' };
+
+	it('went live when its Gate run passed and its own Smoke run is in', () => {
+		const release = dashboardView(summary([run('gate', 2)], [run('smoke', 1)]), now).release;
+
+		expect(release).toEqual({ state: 'promoted', smoke: 'this-release' });
+	});
+
+	it('was cleared to go live when its Gate run passed, with the latest Smoke run from an earlier Release', () => {
+		const view = dashboardView(summary([run('gate', 1, newerChange)], [run('smoke', 3)]), now);
+
+		expect(view.release).toEqual({ state: 'promoted', smoke: 'earlier-release' });
+	});
+
+	it('was cleared to go live when its Gate run passed and there is no Smoke run yet', () => {
+		expect(dashboardView(summary([run('gate', 1)], []), now).release).toEqual({ state: 'promoted', smoke: 'none' });
+	});
+
+	it('was blocked when its Gate run failed, so the latest Smoke run is from an earlier Release', () => {
+		const view = dashboardView(summary([run('gate', 1, { status: 'failed', ...newerChange })], [run('smoke', 3)]), now);
+
+		expect(view.release).toEqual({ state: 'blocked', smoke: 'earlier-release' });
+	});
+
+	it('does not join a Smoke run to a failed Gate run of the same change', () => {
+		const view = dashboardView(summary([run('gate', 1, { status: 'failed' })], [run('smoke', 3)]), now);
+
+		expect(view.release).toEqual({ state: 'blocked', smoke: 'earlier-release' });
+	});
+
+	it('was blocked with no Smoke run at all', () => {
+		expect(dashboardView(summary([run('gate', 1, { status: 'failed' })], []), now).release).toEqual({ state: 'blocked', smoke: 'none' });
+	});
+
+	it('does not join a Smoke run that started before the Gate run', () => {
+		const view = dashboardView(summary([run('gate', 1)], [run('smoke', 3)]), now);
+
+		expect(view.release).toEqual({ state: 'promoted', smoke: 'earlier-release' });
+	});
+
+	it('has nothing to show when there is no Gate run or no readable summary', () => {
+		expect(dashboardView(summary([], [run('smoke', 1)]), now).release).toEqual({ state: 'none' });
+		expect(dashboardView(undefined, now).release).toEqual({ state: 'none' });
+	});
+});

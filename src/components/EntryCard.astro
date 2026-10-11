@@ -29,6 +29,7 @@ const Heading = `h${level}` as const;
 	class:list={['entry-card', { 'is-row': layout === 'row' }]}
 	data-reveal
 	data-spotlight
+	data-lit={layout === 'card' ? 'travel' : ''}
 	data-tilt={layout === 'card' ? '8' : undefined}
 	style={`--d:${index % 3}`}
 >
