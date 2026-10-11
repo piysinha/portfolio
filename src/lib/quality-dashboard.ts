@@ -40,6 +40,18 @@ export interface DashboardView {
 	trend: Record<RunKind, { points: TrendPoint[]; passedLabel: string }>;
 	/** Every run, newest first across both kinds: the table view of the trend. */
 	table: TableRow[];
+	release: Release;
+}
+
+/**
+ * The latest Release: its Gate run, promotion if that passed, then its Smoke run. summary.json
+ * doesn't record promotion, so it is inferred from the Gate run. The latest Smoke run belongs to
+ * this Release only if it tested the same change after that Gate run passed; otherwise it is
+ * from an earlier Release (this one was blocked, or its Smoke run isn't in yet).
+ */
+export interface Release {
+	promoted: boolean;
+	smokeFromThisRelease: boolean;
 }
 
 const KIND_NAMES = { gate: 'Gate run', smoke: 'Smoke run' } as const;
@@ -70,6 +82,15 @@ export function dashboardView(summary: unknown, now: Date): DashboardView {
 				counts: run.counts,
 				reportUrl: run.reportUrl,
 			})),
+		release: release(gate, smoke),
+	};
+}
+
+function release(gate: RunSummary | undefined, smoke: RunSummary | undefined): Release {
+	const promoted = gate?.status === 'passed';
+	return {
+		promoted,
+		smokeFromThisRelease: promoted && !!smoke && smoke.commit === gate.commit && smoke.startedAt >= gate.startedAt,
 	};
 }
 

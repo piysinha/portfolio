@@ -9,6 +9,7 @@ export const sectionChecks = {
 	projectSource: { spec: 'content-pages.spec.ts', title: 'a Project links to its source code' },
 	caseStudyCards: { spec: 'content-pages.spec.ts', title: 'a Case study card leads with the Problem its page tells' },
 	caseStudyStory: { spec: 'content-pages.spec.ts', title: 'a Case study tells its Problem, Approach and Outcome' },
+	latestRelease: { spec: 'quality-dashboard.spec.ts', title: 'promotion lights up only when the Gate run passed' },
 	careerPath: { spec: 'about.spec.ts', title: 'the Career path runs newest first, from test automation back to hospitality' },
 	enquiry: { spec: 'contact.spec.ts', title: 'Visitor sends an Enquiry and sees it confirmed' },
 } as const;
