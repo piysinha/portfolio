@@ -2,6 +2,7 @@
 import { getCollection, render, type CollectionEntry } from 'astro:content';
 import EntryMeta from '../../components/EntryMeta.astro';
 import BaseLayout from '../../layouts/BaseLayout.astro';
+import { transitionName } from '../../lib/transitions';
 
 export async function getStaticPaths() {
 	const caseStudies = await getCollection('caseStudies');
@@ -19,7 +20,9 @@ const { Content } = await render(caseStudy);
 <BaseLayout title={caseStudy.data.title} description={caseStudy.data.problem}>
 	<Fragment slot="hero">
 		<p class="mb-5"><a class="link" href="/case-studies">All case studies</a></p>
-		<h1 class="title-long">{caseStudy.data.title}</h1>
+		<h1 class="title-long" style={`view-transition-name: ${transitionName(`/case-studies/${caseStudy.id}`)}`}>
+			{caseStudy.data.title}
+		</h1>
 		<EntryMeta date={caseStudy.data.date} tags={caseStudy.data.tags} />
 	</Fragment>
 	<div class="grid gap-12 lg:grid-cols-[minmax(0,1fr)_minmax(0,22rem)] lg:gap-16">

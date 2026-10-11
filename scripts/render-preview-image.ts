@@ -53,9 +53,9 @@ const html = `<!doctype html>
 		padding: 0 64px 36px 76px;
 		overflow: hidden;
 		background:
-			radial-gradient(circle at 88% 12%, rgb(35 44 120 / 0.55), transparent 55%),
-			#0c1024;
-		color: #e8eaf6;
+			radial-gradient(circle at 88% 12%, rgb(124 77 255 / 0.4), transparent 55%),
+			#0d0917;
+		color: #ece8f6;
 		font-family: 'Archivo', sans-serif;
 	}
 	.name {
@@ -67,7 +67,7 @@ const html = `<!doctype html>
 	}
 	.role {
 		margin-top: 34px;
-		color: #9eabff;
+		color: #b49aff;
 		font-size: 34px;
 		white-space: nowrap;
 		font-stretch: 110%;
@@ -82,9 +82,9 @@ const html = `<!doctype html>
 	.term {
 		overflow: hidden;
 		border-radius: 22px;
-		background: #060919;
-		box-shadow: 0 0 0 1px #283056;
-		color: #e6e9f7;
+		background: #08050f;
+		box-shadow: 0 0 0 1px #2b2345;
+		color: #ece8f6;
 		font-family: 'JetBrains Mono', monospace;
 		font-size: 17px;
 		line-height: 1.5;
@@ -97,13 +97,13 @@ const html = `<!doctype html>
 	}
 	.bar i { width: 13px; height: 13px; border-radius: 50%; background: rgb(255 255 255 / 0.18); }
 	.body { display: grid; gap: 12px; padding: 22px 26px 28px; }
-	.prompt { color: #a8b3ff; }
+	.prompt { color: #c3afff; }
 	ol { display: grid; gap: 10px; list-style: none; }
 	li { display: grid; grid-template-columns: 26px 1fr; }
 	.ok { color: #62d38e; }
 	.summary { margin-top: 4px; padding-top: 16px; border-top: 1px dashed rgb(255 255 255 / 0.09); }
 	.result { font-weight: 700; }
-	.release { color: #939ac2; }
+	.release { color: #a197c0; }
 </style>
 </head>
 <body>

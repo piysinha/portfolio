@@ -1,0 +1,37 @@
+---
+// A section's label: the real test that checks it (see src/lib/section-checks.ts).
+import { sectionChecks, type SectionCheck } from '../lib/section-checks';
+
+interface Props {
+	check: SectionCheck;
+}
+
+const { spec, title } = sectionChecks[Astro.props.check];
+---
+
+<p class="test-label" data-testid="test-label">
+	<span class="sr-only">Checked by the test </span><span class="tick" aria-hidden="true">✓</span>
+	<span class="spec">{spec}</span> <span aria-hidden="true">›</span>
+	{title}
+</p>
+
+<style>
+	.test-label {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: baseline;
+		gap: 0.1rem 0.45rem;
+		margin-bottom: 0.6rem;
+		color: var(--ink-2);
+		font-family: var(--font-mono);
+		font-size: 0.78rem;
+		line-height: 1.5;
+	}
+	.tick {
+		color: var(--accent);
+		font-weight: 700;
+	}
+	.spec {
+		color: var(--ink);
+	}
+</style>
