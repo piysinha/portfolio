@@ -168,12 +168,15 @@ const kinds = [
 			state.replaceChildren();
 			return;
 		}
-		const { promoted } = view.release;
+		const { promoted, smokeFromThisRelease } = view.release;
 		tile.dataset.promoted = String(promoted);
-		state.replaceChildren(
-			el('strong', {}, promoted ? 'Promoted' : 'Not promoted'),
-			promoted ? ' The deploy that passed went live.' : ' The Gate run failed, so nothing went live.',
-		);
+		// "Went live" only once its own Smoke run proves it; until then the Gate run only cleared it.
+		const detail = !promoted
+			? ' The Gate run failed, so nothing went live.'
+			: smokeFromThisRelease
+				? ' The deploy that passed went live.'
+				: ' The Gate run passed, so this change was cleared to go live.';
+		state.replaceChildren(el('strong', {}, promoted ? 'Promoted' : 'Not promoted'), detail);
 	}
 
 	function renderTrend(kind: RunKind, trend: DashboardView['trend'][RunKind]) {
