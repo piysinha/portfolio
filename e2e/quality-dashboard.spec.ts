@@ -25,7 +25,7 @@ test('shows all checks passing, with each latest run and its report', async ({ p
 });
 
 test('says so plainly when the live site fails its Smoke run', async ({ page }) => {
-	await serveSummary(page, summaryWith([run('gate', 2)], [run('smoke', 1, 'failed')]));
+	await serveSummary(page, summaryWith([run('gate', 2)], [run('smoke', 1, { status: 'failed' })]));
 	await page.goto('/quality');
 
 	await expect(overall(page)).toContainText('Production check failing');
@@ -34,7 +34,7 @@ test('says so plainly when the live site fails its Smoke run', async ({ page }) 
 });
 
 test('explains a release the Gate run blocked', async ({ page }) => {
-	await serveSummary(page, summaryWith([run('gate', 1, 'failed')], [run('smoke', 3)]));
+	await serveSummary(page, summaryWith([run('gate', 1, { status: 'failed' })], [run('smoke', 3)]));
 	await page.goto('/quality');
 
 	await expect(overall(page)).toContainText('Latest release blocked');
@@ -53,7 +53,7 @@ test('stays useful when the reports site cannot be reached', async ({ page }) =>
 });
 
 test('the trend links every recent run to its report, oldest first', async ({ page }) => {
-	await serveSummary(page, summaryWith([run('gate', 1), run('gate', 2, 'failed'), run('gate', 3)], [run('smoke', 1)]));
+	await serveSummary(page, summaryWith([run('gate', 1), run('gate', 2, { status: 'failed' }), run('gate', 3)], [run('smoke', 1)]));
 	await page.goto('/quality');
 	const gateTrend = page.getByRole('region', { name: 'Gate run history' });
 
@@ -67,7 +67,7 @@ test('the trend links every recent run to its report, oldest first', async ({ pa
 
 test('a trend bar shows its run in a tooltip on hover and keyboard focus', async ({ page, isMobile }) => {
 	test.skip(isMobile, 'Hover needs a pointer; focus is covered on the desktop projects');
-	await serveSummary(page, summaryWith([run('gate', 1), run('gate', 2, 'failed')], [run('smoke', 1)]));
+	await serveSummary(page, summaryWith([run('gate', 1), run('gate', 2, { status: 'failed' })], [run('smoke', 1)]));
 	await page.goto('/quality');
 	const bars = page.getByRole('region', { name: 'Gate run history' }).getByRole('link');
 	const tooltip = page.getByRole('tooltip');
@@ -89,7 +89,7 @@ test('promotion lights up only when the Gate run passed', async ({ page }) => {
 	await expect(card(page, 'Smoke run')).not.toContainText('earlier Release');
 
 	await page.unrouteAll();
-	await serveSummary(page, summaryWith([run('gate', 1, 'failed', NEWER_CHANGE)], [run('smoke', 3)]));
+	await serveSummary(page, summaryWith([run('gate', 1, { status: 'failed', commit: NEWER_CHANGE })], [run('smoke', 3)]));
 	await page.reload();
 
 	await expect(promotion(page)).toContainText('Not promoted');
@@ -97,7 +97,7 @@ test('promotion lights up only when the Gate run passed', async ({ page }) => {
 });
 
 test('a Smoke run from an earlier Release is not shown as part of the latest one', async ({ page }) => {
-	await serveSummary(page, summaryWith([run('gate', 1, 'passed', NEWER_CHANGE)], [run('smoke', 3)]));
+	await serveSummary(page, summaryWith([run('gate', 1, { commit: NEWER_CHANGE })], [run('smoke', 3)]));
 	await page.goto('/quality');
 
 	await expect(promotion(page)).toContainText('Promoted');
@@ -139,7 +139,7 @@ for (const colorScheme of ['light', 'dark'] as const) {
 	test(`the dashboard has no accessibility violations with a failing run in ${colorScheme} theme`, async ({ page }) => {
 		// Axe checks the settled design: mid-animation colours are not what Visitors read.
 		await page.emulateMedia({ colorScheme, reducedMotion: 'reduce' });
-		await serveSummary(page, summaryWith([run('gate', 1, 'failed'), run('gate', 2)], [run('smoke', 1, 'failed')]));
+		await serveSummary(page, summaryWith([run('gate', 1, { status: 'failed' }), run('gate', 2)], [run('smoke', 1, { status: 'failed' })]));
 		await page.goto('/quality');
 		await expect(overall(page)).toContainText('Production check failing');
 

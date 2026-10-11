@@ -3,15 +3,24 @@ import type { Page } from '@playwright/test';
 // Fake reports-site summaries, so pages that read summary.json are tested against known results.
 const SUMMARY_URL = 'https://piyush-sinha-test-reports.pages.dev/summary.json';
 
-export const run = (kind: 'gate' | 'smoke', hoursAgo: number, status: 'passed' | 'failed' = 'passed', change = 'ba9ad3b1234567890abcdef1234567890abcdef') => ({
+interface RunOverrides {
+	status?: 'passed' | 'failed';
+	/** The change it tested. A Gate run and its Smoke run share one. */
+	commit?: string;
+}
+
+export const run = (
+	kind: 'gate' | 'smoke',
+	hoursAgo: number,
+	{ status = 'passed', commit = 'ba9ad3b1234567890abcdef1234567890abcdef' }: RunOverrides = {},
+) => ({
 	kind,
 	status,
 	startedAt: new Date(Date.now() - hoursAgo * 3_600_000).toISOString(),
 	durationMs: kind === 'gate' ? 143_000 : 13_800,
 	counts: { passed: kind === 'gate' ? 217 : 34, failed: status === 'failed' ? 2 : 0, flaky: 0, skipped: kind === 'gate' ? 7 : 0 },
 	projects: kind === 'gate' ? ['chromium', 'firefox', 'webkit', 'mobile-chrome'] : ['chromium', 'mobile-chrome'],
-	/** The change it tested. A Gate run and its Smoke run share one. */
-	commit: change,
+	commit,
 	reportUrl: `https://${kind}${hoursAgo}.piyush-sinha-test-reports.pages.dev`,
 	runUrl: `https://github.com/piysinha/portfolio/actions/runs/${hoursAgo}`,
 	deploymentId: `${kind}-${hoursAgo}`,

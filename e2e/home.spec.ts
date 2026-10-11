@@ -55,7 +55,7 @@ test.describe("Home's terminal replay", () => {
 	});
 
 	test('says so when the live site fails its latest check', async ({ page }) => {
-		await serveSummary(page, summaryWith([run('gate', 2)], [run('smoke', 1, 'failed')]));
+		await serveSummary(page, summaryWith([run('gate', 2)], [run('smoke', 1, { status: 'failed' })]));
 		await page.goto('/');
 
 		await expect(summary(page)).toContainText('2 failed on the live site');
