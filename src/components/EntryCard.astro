@@ -1,5 +1,6 @@
 ---
 import type { FeaturedItem } from '../lib/featured';
+import { transitionName } from '../lib/transitions';
 import EntryMeta from './EntryMeta.astro';
 
 interface Props {
@@ -24,12 +25,18 @@ const { title, href, summary, highlight, date, tags, kind, level = 2, layout = '
 const Heading = `h${level}` as const;
 ---
 
-<article class:list={['entry-card', { 'is-row': layout === 'row' }]} data-reveal data-spotlight style={`--d:${index % 3}`}>
+<article
+	class:list={['entry-card', { 'is-row': layout === 'row' }]}
+	data-reveal
+	data-spotlight
+	data-tilt={layout === 'card' ? '8' : undefined}
+	style={`--d:${index % 3}`}
+>
 	<span class="entry-arrow" aria-hidden="true">
 		<svg viewBox="0 0 24 24" width="16" height="16"><path d="M7 17 17 7M9 7h8v8"></path></svg>
 	</span>
 	{kind && <p class="entry-kind" data-testid="kind">{kind}</p>}
-	<Heading><a href={href}>{title}</a></Heading>
+	<Heading><a href={href} style={`view-transition-name: ${transitionName(href)}`}>{title}</a></Heading>
 	<p data-testid="summary">{summary}</p>
 	{
 		highlight && (

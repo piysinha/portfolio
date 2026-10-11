@@ -1,7 +1,8 @@
 /*
- * Design: "Signed off". Cool paper, navy ink and one ultramarine "review ink" accent. A tick means
- * verified, and green or red only ever reports a real test result. Archivo's width axis carries the
- * personality: display type is set wide and heavy, body text at normal width.
+ * Design: "Ultraviolet". Lavender paper, aubergine ink and one violet accent, with depth: glass
+ * surfaces, a soft violet glow, and cards that tilt towards the pointer. A tick means verified, and
+ * green or red only ever reports a real test result. Archivo's width axis carries the personality:
+ * display type is set wide and heavy, body text at normal width.
  */
 @import 'tailwindcss';
 
@@ -45,18 +46,23 @@
 	/* Colour tokens. data-theme is set before first paint; without JS the system setting applies. */
 	:root {
 		color-scheme: light;
-		--paper: #f4f5fa;
+		--paper: #f5f3fa;
 		--surface: #ffffff;
-		--ink: #121735;
-		--ink-2: #50577a;
-		--accent: #2b3fd9;
-		--accent-strong: #1f2fb0;
-		--accent-soft: #e4e7fd;
+		--ink: #1b1230;
+		--ink-2: #5c5475;
+		--accent: #6430d4;
+		--accent-strong: #4f24b3;
+		--accent-soft: #ece5fd;
 		--on-accent: #ffffff;
-		--rule: #d8dbe8;
-		/* A deep band for calls to action: navy in the light theme, deep ultramarine in the dark one. */
-		--band: #121735;
-		--on-band: #f4f5fa;
+		--rule: #e0daee;
+		/* A deep band for calls to action: aubergine in the light theme, deep violet in the dark one. */
+		--band: #1b1230;
+		--on-band: #f5f3fa;
+		/* Light behind things: the hero glow, card shadows and the call-to-action band's aurora. */
+		--glow: #8b5cf6;
+		/* Thin construction lines: the hero's grid floor and the frames round sections. */
+		--grid-line: color-mix(in srgb, var(--ink) 9%, transparent);
+		--mark: color-mix(in srgb, var(--ink) 38%, transparent);
 		/* Status colours, reserved for real pass/fail results and always paired with an icon and words. */
 		--pass: #137a36;
 		--fail: #c0322a;
@@ -64,17 +70,18 @@
 
 	:root[data-theme='dark'] {
 		color-scheme: dark;
-		--paper: #0c1024;
-		--surface: #141936;
-		--ink: #e8eaf6;
-		--ink-2: #a3a9c9;
-		--accent: #9eabff;
-		--accent-strong: #bfc8ff;
-		--accent-soft: #1f2656;
-		--on-accent: #0c1024;
-		--rule: #283056;
-		--band: #232c78;
-		--on-band: #f4f5fa;
+		--paper: #0d0917;
+		--surface: #161026;
+		--ink: #ece8f6;
+		--ink-2: #a69ebf;
+		--accent: #b49aff;
+		--accent-strong: #d0c1ff;
+		--accent-soft: #2a1f4b;
+		--on-accent: #0d0917;
+		--rule: #2b2345;
+		--band: #3b2290;
+		--on-band: #f5f3fa;
+		--glow: #7c4dff;
 		--pass: #56c77a;
 		--fail: #ff8a80;
 	}
@@ -82,15 +89,18 @@
 	@media (prefers-color-scheme: dark) {
 		:root:not([data-theme]) {
 			color-scheme: dark;
-			--paper: #0c1024;
-			--surface: #141936;
-			--ink: #e8eaf6;
-			--ink-2: #a3a9c9;
-			--accent: #9eabff;
-			--accent-strong: #bfc8ff;
-			--accent-soft: #1f2656;
-			--on-accent: #0c1024;
-			--rule: #283056;
+			--paper: #0d0917;
+			--surface: #161026;
+			--ink: #ece8f6;
+			--ink-2: #a69ebf;
+			--accent: #b49aff;
+			--accent-strong: #d0c1ff;
+			--accent-soft: #2a1f4b;
+			--on-accent: #0d0917;
+			--rule: #2b2345;
+			--band: #3b2290;
+			--on-band: #f5f3fa;
+			--glow: #7c4dff;
 			--pass: #56c77a;
 			--fail: #ff8a80;
 		}
@@ -102,6 +112,12 @@
 		font-family: var(--font-sans);
 		-webkit-text-size-adjust: 100%;
 		text-size-adjust: 100%;
+	}
+
+	/* Backdrops, frames and tilted cards reach out to the page edge; nothing may scroll sideways
+	   because of them. On html this would pass to the viewport, which can still be scrolled. */
+	main {
+		overflow-x: clip;
 	}
 
 	body {
@@ -428,6 +444,67 @@
 		line-height: 1.5;
 	}
 
+	/* A border that lights up where the pointer is (or, on touch screens, as the card crosses the middle
+	   of the screen). data-spotlight sets --mx and --my; data-tilt sets .is-lit on touch screens. */
+	.entry-card::after {
+		content: '';
+		position: absolute;
+		inset: -1px;
+		padding: 1.5px;
+		border-radius: inherit;
+		background: radial-gradient(16rem circle at var(--mx, 50%) var(--my, 50%), var(--accent), transparent 65%);
+		-webkit-mask:
+			linear-gradient(#000 0 0) content-box,
+			linear-gradient(#000 0 0);
+		-webkit-mask-composite: xor;
+		mask:
+			linear-gradient(#000 0 0) content-box exclude,
+			linear-gradient(#000 0 0);
+		opacity: 0;
+		transition: opacity 0.3s ease;
+		pointer-events: none;
+	}
+
+	.entry-card:hover::after,
+	.entry-card:focus-within::after,
+	.entry-card.is-lit::after {
+		opacity: 1;
+	}
+
+	/* ---------- Frames: thin rules out to the page edge, with + marks at the content's corners ---------- */
+
+	.frame {
+		position: relative;
+		isolation: isolate;
+	}
+
+	.frame::before {
+		content: '';
+		position: absolute;
+		z-index: -1;
+		inset: -1.75rem calc(50% - 50vw);
+		border-block: 1px solid var(--grid-line);
+		pointer-events: none;
+	}
+
+	.frame::after {
+		--o: 6px;
+		content: '';
+		position: absolute;
+		z-index: -1;
+		inset: calc(-1.75rem - var(--o)) calc(-0.75rem - var(--o));
+		background:
+			linear-gradient(var(--mark), var(--mark)) 0 var(--o) / 13px 1px no-repeat,
+			linear-gradient(var(--mark), var(--mark)) 100% var(--o) / 13px 1px no-repeat,
+			linear-gradient(var(--mark), var(--mark)) 0 calc(100% - var(--o)) / 13px 1px no-repeat,
+			linear-gradient(var(--mark), var(--mark)) 100% calc(100% - var(--o)) / 13px 1px no-repeat,
+			linear-gradient(var(--mark), var(--mark)) var(--o) 0 / 1px 13px no-repeat,
+			linear-gradient(var(--mark), var(--mark)) calc(100% - var(--o)) 0 / 1px 13px no-repeat,
+			linear-gradient(var(--mark), var(--mark)) var(--o) 100% / 1px 13px no-repeat,
+			linear-gradient(var(--mark), var(--mark)) calc(100% - var(--o)) 100% / 1px 13px no-repeat;
+		pointer-events: none;
+	}
+
 	/* ---------- Long-form text ---------- */
 
 	.prose {
@@ -560,16 +637,45 @@
 		translate: 0 0;
 	}
 
+	/* Cards lean towards the pointer (data-tilt sets --rx and --ry). */
 	.entry-card:not(.is-row) {
+		transform: perspective(900px) rotateX(var(--rx, 0deg)) rotateY(var(--ry, 0deg));
 		transition:
 			border-color 0.2s ease,
+			transform 0.5s cubic-bezier(0.2, 0.8, 0.2, 1),
 			translate 0.25s cubic-bezier(0.2, 0.8, 0.2, 1),
-			box-shadow 0.25s ease;
+			box-shadow 0.3s ease;
 	}
 
 	.entry-card:not(.is-row):hover {
 		translate: 0 -4px;
-		box-shadow: 0 18px 36px -24px rgb(18 23 53 / 0.45);
+		box-shadow: 0 28px 50px -30px color-mix(in srgb, var(--glow) 75%, transparent);
+	}
+
+	/* A light travels round the border of a lit card. */
+	.entry-card:not(.is-row):hover::after,
+	.entry-card.is-lit::after {
+		background:
+			radial-gradient(16rem circle at var(--mx, 50%) var(--my, 50%), var(--accent), transparent 65%),
+			conic-gradient(from var(--angle), transparent 0 70%, var(--glow) 85%, transparent 100%);
+		animation: travel 3.2s linear infinite;
+	}
+
+	/* Pages cross-fade, and an entry's title flows into its own page's title (see transitionName). */
+	@view-transition {
+		navigation: auto;
+	}
+}
+
+@property --angle {
+	syntax: '<angle>';
+	inherits: false;
+	initial-value: 0deg;
+}
+
+@keyframes travel {
+	to {
+		--angle: 360deg;
 	}
 }
 

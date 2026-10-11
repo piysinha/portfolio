@@ -3,6 +3,7 @@ import '@fontsource-variable/archivo/wdth.css';
 import '@fontsource-variable/jetbrains-mono';
 import ExternalLink from '../components/ExternalLink.astro';
 import Header from '../components/Header.astro';
+import HeroBackdrop from '../components/HeroBackdrop.astro';
 import { productionHost } from '../lib/analytics';
 import { owner, pageTitle, previewImage } from '../lib/site';
 import '../styles/global.css';
@@ -57,7 +58,8 @@ const previewImageUrl = new URL(previewImage.path, `https://${productionHost}`).
 			{
 				Astro.slots.has('hero') && (
 					<section class="page-hero">
-						<div class="mx-auto max-w-page px-4 pt-12 pb-4 sm:px-6 sm:pt-16 sm:pb-6">
+						<div class="relative isolate mx-auto max-w-page px-4 pt-12 pb-4 sm:px-6 sm:pt-16 sm:pb-6">
+							<HeroBackdrop />
 							<slot name="hero" />
 						</div>
 					</section>
@@ -148,6 +150,47 @@ const previewImageUrl = new URL(previewImage.path, `https://${productionHost}`).
 					element.style.setProperty('--mx', `${event.clientX - box.left}px`);
 					element.style.setProperty('--my', `${event.clientY - box.top}px`);
 				});
+			}
+
+			// Elements marked data-tilt lean towards the pointer, up to data-tilt degrees. Touch screens have
+			// no pointer, so there they lean as they scroll past the middle of the screen, and light up there.
+			const tilters = [...document.querySelectorAll<HTMLElement>('[data-tilt]')];
+			if (!reduce && !matchMedia('(hover: none)').matches) {
+				for (const element of tilters) {
+					const max = Number(element.dataset.tilt);
+					element.addEventListener('pointermove', (event) => {
+						if (event.pointerType !== 'mouse') return;
+						const box = element.getBoundingClientRect();
+						element.style.setProperty('--ry', `${((event.clientX - box.left) / box.width - 0.5) * max}deg`);
+						element.style.setProperty('--rx', `${(0.5 - (event.clientY - box.top) / box.height) * max}deg`);
+					});
+					element.addEventListener('pointerleave', () => {
+						element.style.removeProperty('--rx');
+						element.style.removeProperty('--ry');
+					});
+				}
+			} else if (!reduce && tilters.length > 0) {
+				let queued = false;
+				const lean = () => {
+					queued = false;
+					for (const element of tilters) {
+						const box = element.getBoundingClientRect();
+						// -1 when its centre is at the bottom of the screen, 0 at the middle, 1 at the top.
+						const t = Math.max(-1, Math.min(1, (innerHeight / 2 - (box.top + box.height / 2)) / (innerHeight / 2)));
+						element.style.setProperty('--rx', `${-t * Number(element.dataset.tilt)}deg`);
+						element.style.setProperty('--my', `${50 + t * 50}%`);
+						element.classList.toggle('is-lit', Math.abs(t) < 0.35);
+					}
+				};
+				addEventListener(
+					'scroll',
+					() => {
+						if (!queued) requestAnimationFrame(lean);
+						queued = true;
+					},
+					{ passive: true },
+				);
+				lean();
 			}
 		</script>
 	</body>

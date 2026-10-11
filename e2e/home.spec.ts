@@ -79,3 +79,34 @@ test.describe("Home's terminal replay", () => {
 		await expect(summary(page)).toContainText('217 passed (2m 23s)');
 	});
 });
+
+test.describe('The report tabs behind the terminal', () => {
+	const tabs = (page: Page) => page.getByTestId('terminal-stack').getByRole('link', { name: /^(HTML report|Traces)/ });
+
+	test('open the latest Gate run report in a new tab', async ({ page }) => {
+		await serveSummary(page, summaryWith([run('gate', 2), run('gate', 30)], [run('smoke', 1)]));
+		await page.goto('/');
+
+		for (const tab of await tabs(page).all()) {
+			await expect(tab).toHaveAttribute('href', 'https://gate2.piyush-sinha-test-reports.pages.dev');
+			await expect(tab).toHaveAttribute('target', '_blank');
+			await expect(tab).toHaveAccessibleName(/\(opens in a new tab\)$/);
+		}
+	});
+
+	test('lead to the Quality dashboard when results are unreachable', async ({ page }) => {
+		await serveSummary(page, 'unreachable');
+		await page.goto('/');
+
+		await expect(tabs(page)).toHaveCount(2);
+		for (const tab of await tabs(page).all()) await expect(tab).toHaveAttribute('href', '/quality');
+	});
+});
+
+test('Featured work is labelled with the test that checks it', async ({ page }) => {
+	await page.goto('/');
+
+	await expect(page.getByRole('region', { name: 'Featured work' }).getByTestId('test-label')).toHaveText(
+		/home\.spec\.ts.*Home features work that opens its own page/,
+	);
+});

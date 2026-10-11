@@ -114,7 +114,17 @@ import { replayLines } from '../lib/test-run-replay';
 				import('../lib/quality-dashboard'),
 				import('../lib/release-check'),
 			]);
-			const check = releaseCheck(dashboardView(await response.json(), new Date()));
+			const view = dashboardView(await response.json(), new Date());
+			const check = releaseCheck(view);
+			// Links marked data-latest-report (the tabs behind the terminal) open the latest Gate run's report.
+			const reportUrl = view.latest.gate?.reportUrl;
+			// Like every link to another website, they open in a new tab and say so.
+			for (const link of reportUrl ? document.querySelectorAll<HTMLAnchorElement>('[data-latest-report]') : []) {
+				link.href = reportUrl!;
+				link.target = '_blank';
+				link.rel = 'noopener noreferrer';
+				link.insertAdjacentHTML('beforeend', '<span class="sr-only"> (opens in a new tab)</span>');
+			}
 			summary.dataset.state = check.state;
 			summary.querySelector('[data-result]')!.textContent = check.result;
 			summary.querySelector('[data-release]')!.textContent = check.release;
@@ -146,24 +156,27 @@ import { replayLines } from '../lib/test-run-replay';
 
 <style>
 	.term {
-		--term-bg: #0b1030;
-		--term-fg: #e6e9f7;
-		--term-muted: #939ac2;
+		--term-bg: #140b29;
+		--term-fg: #ece8f6;
+		--term-muted: #a197c0;
 		--term-line: rgb(255 255 255 / 0.09);
-		--term-accent: #a8b3ff;
+		--term-accent: #c3afff;
 		--term-pass: #62d38e;
 		--term-fail: #ff8a80;
 		overflow: hidden;
 		border-radius: 1.25rem;
-		background: var(--term-bg);
+		/* Glass: what is behind it shows through, blurred. */
+		background: color-mix(in srgb, var(--term-bg) 90%, transparent);
+		-webkit-backdrop-filter: blur(10px);
+		backdrop-filter: blur(10px);
 		color: var(--term-fg);
-		box-shadow: 0 30px 60px -30px rgb(18 23 53 / 0.55);
+		box-shadow: 0 30px 60px -30px color-mix(in srgb, var(--ink) 55%, transparent);
 		font-family: var(--font-mono);
 		font-size: 0.8125rem;
 		line-height: 1.55;
 	}
 	:global([data-theme='dark']) .term {
-		--term-bg: #060919;
+		--term-bg: #08050f;
 		box-shadow: 0 0 0 1px var(--rule);
 	}
 	@media (max-width: 39.999rem) {

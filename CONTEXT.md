@@ -34,6 +34,10 @@ _Avoid_: CI run, pre-deploy tests
 A short Test run against the live production site, done after promotion. It may fail, and a failure is shown publicly.
 _Avoid_: Health check, monitoring run
 
+**Release**:
+One change's path to production: a Gate run on a preview deploy, promotion if it passes, then a Smoke run against the live site.
+_Avoid_: Pipeline, deployment, build
+
 **Quality dashboard**:
 The page that shows Visitors the latest Gate run and Smoke run, with links to their full reports and traces.
 _Avoid_: Test results page, live tests

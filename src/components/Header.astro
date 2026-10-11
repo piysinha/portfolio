@@ -5,7 +5,7 @@ import { owner, sections } from '../lib/site';
 const current = Astro.url.pathname.replace(/(\/index)?(\.html)?\/?$/, '') || '/';
 ---
 
-<header class="site-header sticky top-0 z-30 border-b border-rule bg-paper">
+<header class="site-header sticky top-0 z-30 border-b border-rule">
 	<div class="mx-auto flex max-w-page flex-wrap items-center gap-x-2 px-4 sm:px-6">
 		<a class="brand font-wide mr-auto py-3 text-[1.0625rem] font-extrabold tracking-tight text-ink no-underline" href="/"
 			>{owner.name}</a
@@ -84,6 +84,12 @@ const current = Astro.url.pathname.replace(/(\/index)?(\.html)?\/?$/, '') || '/'
 </script>
 
 <style>
+	/* Frosted glass: the page shows through, blurred, as it scrolls under the header. */
+	.site-header {
+		background: color-mix(in srgb, var(--paper) 72%, transparent);
+		-webkit-backdrop-filter: saturate(1.5) blur(14px);
+		backdrop-filter: saturate(1.5) blur(14px);
+	}
 	.nav-link {
 		display: flex;
 		align-items: center;

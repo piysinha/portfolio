@@ -2,7 +2,8 @@
 import { getCollection } from 'astro:content';
 import EntryCard from '../components/EntryCard.astro';
 import ExternalLink from '../components/ExternalLink.astro';
-import TestRunReplay from '../components/TestRunReplay.astro';
+import TerminalStack from '../components/TerminalStack.astro';
+import TestLabel from '../components/TestLabel.astro';
 import TrackRecord from '../components/TrackRecord.astro';
 import BaseLayout from '../layouts/BaseLayout.astro';
 import { featuredWork } from '../lib/featured';
@@ -47,7 +48,7 @@ const toolbox = [
 				</div>
 			</div>
 			<div class="hero-in" style="--i:1">
-				<TestRunReplay />
+				<TerminalStack />
 				<p class="mt-3 text-center text-[0.9375rem] text-ink-2">
 					Real test names from this site. <a class="link" href="/quality">See the test results</a>
 				</p>
@@ -60,7 +61,8 @@ const toolbox = [
 
 	{
 		featured.length > 0 && (
-			<section aria-labelledby="featured-heading">
+			<section aria-labelledby="featured-heading" class="frame">
+				<TestLabel check="featuredWork" />
 				<div class="flex flex-wrap items-baseline justify-between gap-x-6 gap-y-1" data-reveal>
 					<h2 id="featured-heading" class="section-heading">
 						Featured work
@@ -165,7 +167,7 @@ const toolbox = [
 	}
 	/* A brighter spotlight on the dark band. */
 	.cta::before {
-		background: radial-gradient(28rem circle at var(--mx, 50%) var(--my, 50%), rgb(158 171 255 / 0.3), transparent 70%);
+		background: radial-gradient(28rem circle at var(--mx, 50%) var(--my, 50%), color-mix(in srgb, var(--glow) 35%, transparent), transparent 70%);
 	}
 	.tool {
 		padding: 0.25rem 0.65rem;
@@ -188,7 +190,11 @@ const toolbox = [
 		overflow: hidden;
 		padding: 2.25rem 1.5rem;
 		border-radius: 1.5rem;
-		background: var(--band);
+		/* An aurora in the corners of the band. */
+		background:
+			radial-gradient(60% 120% at 100% 0%, color-mix(in srgb, var(--glow) 55%, transparent), transparent 62%),
+			radial-gradient(40% 80% at 0% 100%, color-mix(in srgb, var(--glow) 25%, transparent), transparent 70%),
+			var(--band);
 		color: var(--on-band);
 	}
 	@media (min-width: 40rem) {
