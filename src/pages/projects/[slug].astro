@@ -2,6 +2,7 @@
 import { getCollection, render, type CollectionEntry } from 'astro:content';
 import EntryMeta from '../../components/EntryMeta.astro';
 import ExternalLink from '../../components/ExternalLink.astro';
+import TestLabel from '../../components/TestLabel.astro';
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import { transitionName } from '../../lib/transitions';
 
@@ -26,20 +27,25 @@ const { Content } = await render(project);
 		</h1>
 		<p class="lede">{project.data.summary}</p>
 		<EntryMeta date={project.data.date} tags={project.data.tags} />
-		<ul class="mt-8 grid gap-3 sm:flex sm:flex-wrap">
-			<li><ExternalLink class="btn btn-primary w-full" href={project.data.repo}>Source code</ExternalLink></li>
-			{
-				project.data.live && (
-					<li>
-						<ExternalLink class="btn btn-secondary w-full" href={project.data.live}>
-							Live site
-						</ExternalLink>
-					</li>
-				)
-			}
-		</ul>
+		<div class="mt-8">
+			<TestLabel check="projectSource" />
+			<ul class="grid gap-3 sm:flex sm:flex-wrap">
+				<li><ExternalLink class="btn btn-primary w-full" href={project.data.repo}>Source code</ExternalLink></li>
+				{
+					project.data.live && (
+						<li>
+							<ExternalLink class="btn btn-secondary w-full" href={project.data.live}>
+								Live site
+							</ExternalLink>
+						</li>
+					)
+				}
+			</ul>
+		</div>
 	</Fragment>
-	<article class="prose">
-		<Content />
-	</article>
+	<div class="frame">
+		<article class="prose">
+			<Content />
+		</article>
+	</div>
 </BaseLayout>
