@@ -4,6 +4,9 @@ import { run, serveSummary, summaryWith } from './summary';
 
 const overall = (page: Page) => page.getByRole('status');
 const card = (page: Page, name: 'Gate run' | 'Smoke run') => page.getByRole('region', { name, exact: true });
+const promotion = (page: Page) => page.getByRole('region', { name: 'Promotion', exact: true });
+const release = (page: Page) => page.getByRole('region', { name: 'The latest Release' });
+const NEWER_CHANGE = 'c0ffee0000000000000000000000000000000000';
 
 test('shows all checks passing, with each latest run and its report', async ({ page }) => {
 	await serveSummary(page, summaryWith([run('gate', 2), run('gate', 5)], [run('smoke', 1)]));
@@ -75,6 +78,61 @@ test('a trend bar shows its run in a tooltip on hover and keyboard focus', async
 
 	await bars.nth(1).focus();
 	await expect(tooltip).toHaveText(/^Passed · /);
+});
+
+test('promotion lights up only when the Gate run passed', async ({ page }) => {
+	await serveSummary(page, summaryWith([run('gate', 2)], [run('smoke', 1)]));
+	await page.goto('/quality');
+
+	await expect(promotion(page)).toContainText('Promoted');
+	await expect(promotion(page)).toHaveAttribute('data-promoted', 'true');
+	await expect(card(page, 'Smoke run')).not.toContainText('earlier Release');
+
+	await page.unrouteAll();
+	await serveSummary(page, summaryWith([run('gate', 1, 'failed', NEWER_CHANGE)], [run('smoke', 3)]));
+	await page.reload();
+
+	await expect(promotion(page)).toContainText('Not promoted');
+	await expect(promotion(page)).toHaveAttribute('data-promoted', 'false');
+});
+
+test('a Smoke run from an earlier Release is not shown as part of the latest one', async ({ page }) => {
+	await serveSummary(page, summaryWith([run('gate', 1, 'passed', NEWER_CHANGE)], [run('smoke', 3)]));
+	await page.goto('/quality');
+
+	await expect(promotion(page)).toContainText('Promoted');
+	await expect(card(page, 'Smoke run')).toContainText('From an earlier Release');
+	await expect(card(page, 'Smoke run')).toContainText('34 passed');
+});
+
+test('the Release shows no pass or fail colour when results cannot load', async ({ page }) => {
+	await serveSummary(page, 'unreachable');
+	await page.goto('/quality');
+	await expect(overall(page)).toContainText("Couldn't load the latest results");
+
+	for (const tile of [card(page, 'Gate run'), promotion(page), card(page, 'Smoke run')]) {
+		await expect(tile).not.toContainText(/Passed|Failed|Promoted/);
+		await expect(tile).not.toHaveAttribute('data-result');
+		await expect(tile).not.toHaveAttribute('data-promoted');
+		// Each tile's edge keeps the accent colour: green and red only ever report a real result.
+		const [edge, accent] = await tile.evaluate((element) => {
+			const probe = element.appendChild(document.createElement('span'));
+			probe.style.color = 'var(--accent)';
+			const colours = [getComputedStyle(element).borderTopColor, getComputedStyle(probe).color];
+			probe.remove();
+			return colours;
+		});
+		expect(edge).toBe(accent);
+	}
+	await expect(card(page, 'Gate run')).toContainText("Couldn't load this run");
+});
+
+test('the latest Release is labelled with the test that checks it', async ({ page }) => {
+	await page.goto('/quality');
+
+	await expect(release(page).getByTestId('test-label')).toHaveText(
+		/quality-dashboard\.spec\.ts.*promotion lights up only when the Gate run passed/,
+	);
 });
 
 for (const colorScheme of ['light', 'dark'] as const) {

@@ -120,3 +120,44 @@ describe('dashboardView', () => {
 		});
 	});
 });
+
+describe('the latest Release', () => {
+	it('was promoted when its Gate run passed, and its Smoke run is part of it', () => {
+		const release = dashboardView(summary([run('gate', 2)], [run('smoke', 1)]), now).release;
+
+		expect(release).toEqual({ promoted: true, smokeFromThisRelease: true });
+	});
+
+	const newerChange = { commit: 'c0ffee0000000000000000000000000000000000' };
+
+	it('was not promoted when its Gate run failed, so the latest Smoke run is from an earlier Release', () => {
+		const view = dashboardView(summary([run('gate', 1, { status: 'failed', ...newerChange })], [run('smoke', 3)]), now);
+
+		expect(view.release).toEqual({ promoted: false, smokeFromThisRelease: false });
+	});
+
+	it('keeps an earlier Smoke run apart from a newer Gate run that passed', () => {
+		const view = dashboardView(summary([run('gate', 1, newerChange)], [run('smoke', 3)]), now);
+
+		expect(view.release).toEqual({ promoted: true, smokeFromThisRelease: false });
+	});
+
+	it('does not join a Smoke run to a failed Gate run of the same change', () => {
+		const view = dashboardView(summary([run('gate', 1, { status: 'failed' })], [run('smoke', 3)]), now);
+
+		expect(view.release.smokeFromThisRelease).toBe(false);
+	});
+
+	it('does not join a Smoke run that started before the Gate run', () => {
+		const view = dashboardView(summary([run('gate', 1)], [run('smoke', 3)]), now);
+
+		expect(view.release.smokeFromThisRelease).toBe(false);
+	});
+
+	it('was not promoted when there is no Gate run or no readable summary', () => {
+		const none = { promoted: false, smokeFromThisRelease: false };
+
+		expect(dashboardView(summary([], [run('smoke', 1)]), now).release).toEqual(none);
+		expect(dashboardView(undefined, now).release).toEqual(none);
+	});
+});

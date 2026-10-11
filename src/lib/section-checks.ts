@@ -5,6 +5,7 @@
  */
 export const sectionChecks = {
 	featuredWork: { spec: 'home.spec.ts', title: 'Home features work that opens its own page' },
+	latestRelease: { spec: 'quality-dashboard.spec.ts', title: 'promotion lights up only when the Gate run passed' },
 } as const;
 
 export type SectionCheck = keyof typeof sectionChecks;
