@@ -85,6 +85,7 @@ test('promotion lights up only when the Gate run passed', async ({ page }) => {
 	await page.goto('/quality');
 
 	await expect(promotion(page)).toContainText('Promoted');
+	await expect(promotion(page)).toContainText('went live');
 	await expect(promotion(page)).toHaveAttribute('data-promoted', 'true');
 	await expect(card(page, 'Smoke run')).not.toContainText('earlier Release');
 
@@ -100,7 +101,10 @@ test('a Smoke run from an earlier Release is not shown as part of the latest one
 	await serveSummary(page, summaryWith([run('gate', 1, { commit: NEWER_CHANGE })], [run('smoke', 3)]));
 	await page.goto('/quality');
 
-	await expect(promotion(page)).toContainText('Promoted');
+	// Lit, but not yet "Promoted": no Smoke run of this change shows it went live.
+	await expect(promotion(page)).toHaveAttribute('data-promoted', 'true');
+	await expect(promotion(page)).toContainText('Cleared to go live');
+	await expect(promotion(page)).not.toContainText(/Promoted|went live\./);
 	await expect(card(page, 'Smoke run')).toContainText('From an earlier Release');
 	await expect(card(page, 'Smoke run')).toContainText('34 passed');
 });
@@ -125,6 +129,16 @@ test('the Release shows no pass or fail colour when results cannot load', async 
 		expect(edge).toBe(accent);
 	}
 	await expect(card(page, 'Gate run')).toContainText("Couldn't load this run");
+	await expect(promotion(page)).toContainText("Couldn't load the Gate run");
+	await expect(promotion(page).getByRole('link', { name: /reports site/ })).toHaveAttribute('href', 'https://piyush-sinha-test-reports.pages.dev/');
+});
+
+test('promotion says there is nothing to promote before the first Gate run', async ({ page }) => {
+	await serveSummary(page, summaryWith([], [run('smoke', 1)]));
+	await page.goto('/quality');
+
+	await expect(promotion(page)).toContainText('No Gate run yet');
+	await expect(promotion(page)).not.toHaveAttribute('data-promoted');
 });
 
 test('the latest Release is labelled with the test that checks it', async ({ page }) => {
